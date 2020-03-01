@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AddLayerWindow</class>
+ <widget class="QDialog" name="AddLayerWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>433</width>
+    <height>374</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>新建一个层</string>
+  </property>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>0</y>
+     <width>401</width>
+     <height>117</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="profile">
+    <item row="0" column="3">
+     <widget class="QLabel" name="type">
+      <property name="text">
+       <string>类型</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>输入：</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="4">
+     <widget class="QComboBox" name="layertype">
+      <item>
+       <property name="text">
+        <string>&lt;选择一种层&gt;</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>输入层(Input)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>卷积层(Conv2d)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>池化层(Pooling)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>线性层(Linear)</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>输出：</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="layerinput"/>
+    </item>
+    <item row="1" column="4">
+     <widget class="QLineEdit" name="layeroutput"/>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLabel" name="name">
+      <property name="text">
+       <string>层名：</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLineEdit" name="layername"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="gridLayoutWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>120</y>
+     <width>401</width>
+     <height>211</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="content"/>
+  </widget>
+  <widget class="QPushButton" name="asurebtn">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>340</y>
+     <width>93</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>添加</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>layertype</sender>
+   <signal>activated(QString)</signal>
+   <receiver>AddLayerWindow</receiver>
+   <slot>fill_content()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>409</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>169</x>
+     <y>94</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>asurebtn</sender>
+   <signal>clicked()</signal>
+   <receiver>AddLayerWindow</receiver>
+   <slot>gen_layer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>348</x>
+     <y>356</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>233</x>
+     <y>354</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>fill_content()</slot>
+  <slot>gen_layer()</slot>
+ </slots>
+</ui>

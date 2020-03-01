@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ModelWindow</class>
+ <widget class="QMainWindow" name="ModelWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>模型</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>640</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="Function">
+    <property name="title">
+     <string>功能</string>
+    </property>
+    <addaction name="ToDataset"/>
+    <addaction name="ToTrain"/>
+   </widget>
+   <widget class="QMenu" name="FileSet">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="InportFile"/>
+    <addaction name="ExportFile"/>
+   </widget>
+   <widget class="QMenu" name="Add">
+    <property name="title">
+     <string>新建</string>
+    </property>
+    <addaction name="AddLayer"/>
+    <addaction name="AddModel"/>
+   </widget>
+   <addaction name="Function"/>
+   <addaction name="FileSet"/>
+   <addaction name="Add"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="ToDataset">
+   <property name="text">
+    <string>数据集</string>
+   </property>
+  </action>
+  <action name="ToTrain">
+   <property name="text">
+    <string>训练</string>
+   </property>
+  </action>
+  <action name="InportFile">
+   <property name="text">
+    <string>导入</string>
+   </property>
+  </action>
+  <action name="ExportFile">
+   <property name="text">
+    <string>导出</string>
+   </property>
+  </action>
+  <action name="AddLayer">
+   <property name="text">
+    <string>层</string>
+   </property>
+  </action>
+  <action name="AddModel">
+   <property name="text">
+    <string>模型</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>AddLayer</sender>
+   <signal>triggered()</signal>
+   <receiver>ModelWindow</receiver>
+   <slot>add_layer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>319</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>add_layer()</slot>
+ </slots>
+</ui>
