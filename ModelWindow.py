@@ -2,6 +2,8 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QRegExpValidator
 from UI_ModelWindow import Ui_ModelWindow
 from UI_AddLayerWindow import Ui_AddLayerWindow
 import os
@@ -12,12 +14,29 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         super(ModelWindow, self).__init__()
         self.setupUi(self)
         self.global_id = 0
+        self.net = list()
+        self.id_name = dict()
+        self.name_id = dict()
     def add_layer(self):
         self.addlayer_window = AddLayerWindow(self.global_id)
         self.global_id += 1
+        self.addlayer_window.datasignal.connect(self.accept_layer)
         self.addlayer_window.show()
+    def accept_layer(self, data):
+        self.id_name[data['ID']] = data['name']
+        self.name_id[data['name']] = data['ID']
+        if data['type'] != 1:
+            try:
+                data['input'] = self.name_id[data['input']]
+            except:
+                QMessageBox.warning(self, "错误", "新建层失败：新建的层的输入来自未创建的层\n（提示：是否未创建输入层？）")
+        else:
+            data['input'] = None
+        self.net.append(data)
+        
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
+    datasignal = pyqtSignal(dict)
     def __init__(self, global_id):
         super(AddLayerWindow, self).__init__()
         self.setupUi(self)
@@ -29,20 +48,31 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             if child.widget():
                 child.widget().deleteLater()
         if self.layertype.currentIndex() == 2:
+            reg = QRegExp('[0-9]+$')
+            pValidator = QRegExpValidator(self)
+            pValidator.setRegExp(reg)
             label_inchannels = QLabel("输入宽度:")
             label_outchannels = QLabel("输出宽度:")
             self.inchannels = QLineEdit()
             self.outchannels = QLineEdit()
+            self.inchannels.setValidator(pValidator)
+            self.outchannels.setValidator(pValidator)
             label_kernelsize = QLabel("卷积核大小:")
             label_X = QLabel("X")
             self.kernelheight = QLineEdit()
             self.kernelwidth = QLineEdit()
+            self.kernelwidth.setValidator(pValidator)
+            self.kernelheight.setValidator(pValidator)
             label_stride = QLabel("stride:")
             self.stride_1 = QLineEdit()
             self.stride_2 = QLineEdit()
+            self.stride_1.setValidator(pValidator)
+            self.stride_2.setValidator(pValidator)
             label_padding = QLabel("padding:")
             self.padding_1 = QLineEdit()
             self.padding_2 = QLineEdit()
+            self.padding_1.setValidator(pValidator)
+            self.padding_2.setValidator(pValidator)
             self.bias = QCheckBox("bias")
             label_paddingmode = QLabel("padding mode:")
             self.paddingmode = QComboBox()
@@ -68,7 +98,6 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.content.addWidget(self.bias, 5, 3)
     def gen_layer(self):
         data = dict()
-        datasignal = pyqtSignal(dict)
         data['ID'] = self.id
         if self.layername.text() == "":
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的名字")
@@ -110,7 +139,8 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
                 QMessageBox.warning(self, "警告", "不合法输入：padding参数均应为正整数")
             data['para']['bias'] = self.bias.isChecked()
             data['para']['paddingmode'] = self.paddingmode.currentText()
-
+            self.datasignal.emit(data)
+            self.destroy()
 
 
 if __name__=="__main__":
