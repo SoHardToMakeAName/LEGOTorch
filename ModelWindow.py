@@ -3,20 +3,23 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QRegExp
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QRegExpValidator
 from UI_ModelWindow import Ui_ModelWindow
 from UI_AddLayerWindow import Ui_AddLayerWindow
 import os
 import json
+import networkx as nx
 
 class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
     def __init__(self):
         super(ModelWindow, self).__init__()
         self.setupUi(self)
         self.global_id = 0
-        self.net = list()
+        self.nodes = list()
         self.id_name = dict()
         self.name_id = dict()
+        self.net = nx.Graph()
     def add_layer(self):
         self.addlayer_window = AddLayerWindow(self.global_id)
         self.global_id += 1
@@ -31,8 +34,9 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             except:
                 QMessageBox.warning(self, "错误", "新建层失败：新建的层的输入来自未创建的层\n（提示：是否未创建输入层？）")
         else:
-            data['input'] = None
-        self.net.append(data)
+            data['input'] = -1
+        self.nodes.append(data)
+
         
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
@@ -47,15 +51,34 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             child = self.content.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
-        if self.layertype.currentIndex() == 2:
+        if self.layertype.currentIndex() == 1:
             reg = QRegExp('[0-9]+$')
             pValidator = QRegExpValidator(self)
             pValidator.setRegExp(reg)
-            label_inchannels = QLabel("输入宽度:")
+            label_h = QLabel("输入维度：h")
+            label_w = QLabel("w:")
+            label_c = QLabel("c:")
+            self.sizeh = QLineEdit()
+            self.sizew = QLineEdit()
+            self.sizec = QLineEdit()
+            self.sizeh.setValidator(pValidator)
+            self.sizew.setValidator(pValidator)
+            self.sizec.setValidator(pValidator)
+            self.content.addWidget(label_h, 0, 0)
+            self.content.addWidget(self.sizeh, 0, 1)
+            self.content.addWidget(label_w, 0, 2)
+            self.content.addWidget(self.sizew, 0, 3)
+            self.content.addWidget(label_c, 0, 4)
+            self.content.addWidget(QLabel(" "), 1, 0)
+        elif self.layertype.currentIndex() == 2:
+            reg = QRegExp('[0-9]+$')
+            pValidator = QRegExpValidator(self)
+            pValidator.setRegExp(reg)
+            # label_inchannels = QLabel("输入宽度:")
             label_outchannels = QLabel("输出宽度:")
-            self.inchannels = QLineEdit()
+            # self.inchannels = QLineEdit()
             self.outchannels = QLineEdit()
-            self.inchannels.setValidator(pValidator)
+            # self.inchannels.setValidator(pValidator)
             self.outchannels.setValidator(pValidator)
             label_kernelsize = QLabel("卷积核大小:")
             label_X = QLabel("X")
@@ -77,8 +100,8 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             label_paddingmode = QLabel("padding mode:")
             self.paddingmode = QComboBox()
             self.paddingmode.addItem("zeros")
-            self.content.addWidget(label_inchannels, 0, 0)
-            self.content.addWidget(self.inchannels, 0, 1, 1, 3)
+            # self.content.addWidget(label_inchannels, 0, 0)
+            # self.content.addWidget(self.inchannels, 0, 1, 1, 3)
             self.content.addWidget(label_outchannels, 1, 0)
             self.content.addWidget(self.outchannels, 1, 1, 1, 3)
             self.content.addWidget(label_kernelsize, 2, 0)
@@ -115,12 +138,14 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的输出")
         else:
             data['output'] = self.layeroutput.text()
+        # data['inputsize'] = (None, None, None)
+        # data['outputsize'] = (None, None, None)
         if self.layertype.currentIndex() == 2:
             data['para'] = dict()
-            try:
-                data['para']['inchannels'] = int(self.inchannels.text())
-            except:
-                QMessageBox.warning(self, "警告", "不合法输入：输入宽度应为正整数")
+            # try:
+            #     data['para']['inchannels'] = int(self.inchannels.text())
+            # except:
+            #     QMessageBox.warning(self, "警告", "不合法输入：输入宽度应为正整数")
             try:
                 data['para']['outchannels'] = int(self.outchannels.text())
             except:
