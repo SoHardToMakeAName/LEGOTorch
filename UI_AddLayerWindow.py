@@ -8,12 +8,18 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QRegExpValidator
 
 
 class Ui_AddLayerWindow(object):
     def setupUi(self, AddLayerWindow):
+        reg1 = QRegExp('^[a-z_]+[a-z0-9_]+$')
+        pValidator1 = QRegExpValidator(self)
+        pValidator1.setRegExp(reg1)
+        reg2 = QRegExp('^[a-z_]+[a-z0-9_;]+$')
+        pValidator2 = QRegExpValidator(self)
+        pValidator2.setRegExp(reg2)
         AddLayerWindow.setObjectName("AddLayerWindow")
         AddLayerWindow.resize(433, 374)
         self.gridLayoutWidget = QtWidgets.QWidget(AddLayerWindow)
@@ -35,27 +41,28 @@ class Ui_AddLayerWindow(object):
         self.layertype.addItem("")
         self.layertype.addItem("")
         self.layertype.addItem("")
+        self.layertype.addItem("")
+        self.layertype.addItem("")
+        self.layertype.addItem("")
+        self.layertype.addItem("")
         self.profile.addWidget(self.layertype, 0, 4, 1, 1)
         self.label_2 = QtWidgets.QLabel(self.gridLayoutWidget)
         self.label_2.setObjectName("label_2")
         self.profile.addWidget(self.label_2, 1, 3, 1, 1)
         self.layerinput = QtWidgets.QLineEdit(self.gridLayoutWidget)
         self.layerinput.setObjectName("layerinput")
+        self.layerinput.setValidator(pValidator2)
         self.profile.addWidget(self.layerinput, 1, 2, 1, 1)
         self.layeroutput = QtWidgets.QLineEdit(self.gridLayoutWidget)
         self.layeroutput.setObjectName("layeroutput")
+        self.layeroutput.setValidator(pValidator2)
         self.profile.addWidget(self.layeroutput, 1, 4, 1, 1)
         self.name = QtWidgets.QLabel(self.gridLayoutWidget)
         self.name.setObjectName("name")
         self.profile.addWidget(self.name, 0, 1, 1, 1)
         self.layername = QtWidgets.QLineEdit(self.gridLayoutWidget)
         self.layername.setObjectName("layername")
-        reg = QRegExp('^[a-zA-Z_]+[a-zA-Z0-9_]*$')
-        pValidator = QRegExpValidator(self)
-        pValidator.setRegExp(reg)
-        self.layername.setValidator(pValidator)
-        self.layerinput.setValidator(pValidator)
-        self.layeroutput.setValidator(pValidator)
+        self.layername.setValidator(pValidator1)
         self.profile.addWidget(self.layername, 0, 2, 1, 1)
         self.gridLayoutWidget_2 = QtWidgets.QWidget(AddLayerWindow)
         self.gridLayoutWidget_2.setGeometry(QtCore.QRect(10, 120, 401, 211))
@@ -75,13 +82,17 @@ class Ui_AddLayerWindow(object):
     def retranslateUi(self, AddLayerWindow):
         _translate = QtCore.QCoreApplication.translate
         AddLayerWindow.setWindowTitle(_translate("AddLayerWindow", "新建一个层"))
-        self.type.setText(_translate("AddLayerWindow", "类型"))
+        self.type.setText(_translate("AddLayerWindow", "类型："))
         self.label.setText(_translate("AddLayerWindow", "输入："))
         self.layertype.setItemText(0, _translate("AddLayerWindow", "<选择一种层>"))
         self.layertype.setItemText(1, _translate("AddLayerWindow", "输入层(Input)"))
         self.layertype.setItemText(2, _translate("AddLayerWindow", "卷积层(Conv2d)"))
         self.layertype.setItemText(3, _translate("AddLayerWindow", "池化层(Pooling)"))
         self.layertype.setItemText(4, _translate("AddLayerWindow", "线性层(Linear)"))
+        self.layertype.setItemText(5, _translate("AddLayerWindow", "Softmax层"))
+        self.layertype.setItemText(6, _translate("AddLayerWindow", "Logsoftmax层"))
+        self.layertype.setItemText(7, _translate("AddLayerWindow", "Batch Norm(1d)层"))
+        self.layertype.setItemText(8, _translate("AddLayerWindow", "Batch Norm(2d)层"))
         self.label_2.setText(_translate("AddLayerWindow", "输出："))
         self.name.setText(_translate("AddLayerWindow", "层名："))
         self.asurebtn.setText(_translate("AddLayerWindow", "添加"))

@@ -64,6 +64,26 @@
         <string>线性层(Linear)</string>
        </property>
       </item>
+      <item>
+       <property name="text">
+        <string>Softmax层</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Logsoftmax层</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Batch Normalization(1d)层</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Batch Normalization(2d)层</string>
+       </property>
+      </item>
      </widget>
     </item>
     <item row="1" column="3">
