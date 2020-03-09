@@ -1,5 +1,6 @@
 
 from PyQt5 import QtWidgets
+import pyqtgraph as pg
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QRegExp
@@ -20,6 +21,13 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.id_name = dict()
         self.name_id = dict()
         self.net = nx.Graph()
+        main_widget = QWidget()
+        main_layout = QGridLayout()
+        main_widget.setLayout(main_layout)
+        pw = pg.PlotWidget()
+        pw.plot([0,1,3,4,5], )
+        main_layout.addWidget(pw)
+        self.setCentralWidget(main_widget)
     def add_layer(self):
         self.addlayer_window = AddLayerWindow(self.global_id)
         self.global_id += 1
@@ -38,6 +46,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.id_name[data['ID']] = data['name']
         self.name_id[data['name']] = data['ID']
         self.nodes.append(data)
+        print("data {} received".format(data['name']))
 
         
 
@@ -46,6 +55,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
     def __init__(self, global_id):
         super(AddLayerWindow, self).__init__()
         self.setupUi(self)
+        self.setFixedSize(433, 374)
         self.id = global_id
         self.setWindowTitle("ID:{}".format(str(self.id)))
     def fill_content(self):
@@ -187,7 +197,55 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.power.setValidator(pValidator)
             self.content.addWidget(label_power, 4, 0)
             self.content.addWidget(self.power, 4, 1)
-
+        elif self.layertype.currentIndex() == 4:
+            reg = QRegExp('[0-9]+$')
+            pValidator = QRegExpValidator(self)
+            pValidator.setRegExp(reg)
+            label_out = QLabel("输出宽度：")
+            self.out_features = QLineEdit()
+            self.out_features.setValidator(pValidator)
+            self.bias = QCheckBox("bias")
+            label_activate = QLabel("激活函数：")
+            self.activate = QComboBox()
+            self.activate.addItem("None")
+            self.activate.addItem("relu")
+            self.activate.addItem("gelu")
+            self.activate.addItem("sigmoid")
+            self.activate.addItem("log_sigmoid")
+            self.activate.addItem("tanh")
+            self.use_dropout = QCheckBox("Dropout")
+            self.dropout_radio = QLineEdit()
+            self.dropout_radio.setText("0.5")
+            self.content.addWidget(label_out, 0, 0)
+            self.content.addWidget(self.out_features, 0, 1)
+            self.content.addWidget(self.bias, 0, 3)
+            self.content.addWidget(label_activate, 1, 0)
+            self.content.addWidget(self.activate, 1, 1)
+            self.content.addWidget(self.use_dropout, 1, 2)
+            self.content.addWidget(self.dropout_radio, 1, 3)
+        elif self.layertype.currentIndex() == 7 or self.layertype.currentIndex() == 8:
+            reg = QRegExp('[0-9e.-]+$')
+            pValidator = QRegExpValidator(self)
+            pValidator.setRegExp(reg)
+            label_eps = QLabel("epsilon:")
+            self.eps = QLineEdit()
+            self.eps.setValidator(pValidator)
+            self.eps.setText("1e-5")
+            reg2 = QRegExp('[0-9.]+$')
+            pValidator2 = QRegExpValidator(self)
+            pValidator2.setRegExp(reg2)
+            label_momentum = QLabel("momentum")
+            self.momentum = QLineEdit()
+            self.momentum.setValidator(pValidator2)
+            self.momentum.setText("0.1")
+            self.affine = QCheckBox("affine")
+            self.track_running_stats = QCheckBox("track running stats")
+            self.content.addWidget(label_eps, 0, 0)
+            self.content.addWidget(self.eps, 0, 1)
+            self.content.addWidget(label_momentum, 1, 0)
+            self.content.addWidget(self.momentum, 1, 1)
+            self.content.addWidget(self.affine, 2, 0)
+            self.content.addWidget(self.track_running_stats, 3, 0)
 
     def gen_layer(self):
         send_data = True
@@ -213,19 +271,14 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             send_data = False
         else:
             data['output'] = self.layeroutput.text()
+        data['para'] = dict()
         if self.layertype.currentIndex() == 1:
             try:
-                data['para'] = dict()
                 data['para']['size'] = (int(self.sizec.text()), int(self.sizeh.text()), int(self.sizew.text()))
             except:
                 QMessageBox.warning(self, "警告", "不合法输入：输入维度均应为正整数")
                 send_data = False
         elif self.layertype.currentIndex() == 2:
-            data['para'] = dict()
-            # try:
-            #     data['para']['inchannels'] = int(self.inchannels.text())
-            # except:
-            #     QMessageBox.warning(self, "警告", "不合法输入：输入宽度应为正整数")
             try:
                 data['para']['outchannels'] = int(self.outchannels.text())
             except:
@@ -257,8 +310,20 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             data['para']['activate'] = self.activate.currentText()
             data['para']['bias'] = self.bias.isChecked()
             data['para']['paddingmode'] = self.paddingmode.currentText()
+            data['para']['dropout'] = self.use_dropout.isChecked()
+            if data['para']['dropout']:
+                try:
+                    radio = float(self.dropout_radio.text())
+                    if 0 <= radio <= 1:
+                        data['para']['dropout_radio'] = radio
+                    else:
+                        QMessageBox.warning(self, "警告", "不合法输入：dropout参数应为0-1之间的数")
+                        send_data = False
+                except:
+                    QMessageBox.warning(self, "警告", "不合法输入：dropout参数应为0-1之间的数")
+                    send_data = False
         elif self.layertype.currentIndex() == 3:
-            data['para'] = dict()
+            data['para']['type'] = self.poolingtype.currentText()
             try:
                 data['para']['kernel'] = (int(self.kernelheight.text()), int(self.kernelwidth.text()))
             except:
@@ -274,8 +339,56 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             except:
                 QMessageBox.warning(self, "警告", "不合法输入：padding参数均应为正整数")
                 send_data = False
-            else:
-                data['para']['dilation'] = None
+            if data['para']['type'] == "LP":
+                try:
+                    data['para']['power'] = self.power.text()
+                except:
+                    QMessageBox.warning(self, "警告", "不合法输入：power参数应为正整数")
+                    send_data = False
+        elif self.layertype.currentIndex() == 4:
+            try:
+                data['para']['out_features'] = int(self.out_features.text())
+            except:
+                QMessageBox.warning(self, "警告", "不合法输入：输出宽度应为正整数")
+                send_data = False
+            data['para']['bias'] = self.bias.isChecked()
+            data['para']['dropout'] = self.use_dropout.isChecked()
+            if data['para']['dropout']:
+                try:
+                    radio = float(self.dropout_radio.text())
+                    if 0 <= radio <= 1:
+                        data['para']['dropout_radio'] = radio
+                    else:
+                        QMessageBox.warning(self, "警告", "不合法输入：dropout参数应为0-1之间的数")
+                        send_data = False
+                except:
+                    QMessageBox.warning(self, "警告", "不合法输入：dropout参数输入格式错误")
+                    send_data = False
+        elif self.layertype.currentIndex() == 5 or self.layertype.currentIndex() == 6:
+            data['para']['dim'] = -1
+        elif self.layertype.currentIndex() == 7 or self.layertype.currentIndex() == 8:
+            try:
+                eps = float(self.eps.text())
+                if 0 <= eps <= 1:
+                    data['para']['eps'] = eps
+                else:
+                    QMessageBox.warning(self, "警告", "不合法输入：epsilon参数应为0-1之间的数")
+                    send_data = False
+            except:
+                QMessageBox.warning(self, "警告", "不合法输入：epsilon参数输入格式错误")
+                send_data = False
+            try:
+                momentum = float(self.momentum.text())
+                if 0 <= momentum <= 1:
+                    data['para']['momentum'] = momentum
+                else:
+                    QMessageBox.warning(self, "警告", "不合法输入：momentum参数应为0-1之间的数")
+                    send_data = False
+            except:
+                QMessageBox.warning(self, "警告", "不合法输入：momentum参数输入格式错误")
+                send_data = False
+            data['para']['affine'] = self.affine.isChecked()
+            data['para']['track_running_stats'] = self.track_running_stats.isChecked()
         if send_data:
             self.datasignal.emit(data)
             self.destroy()
