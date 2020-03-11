@@ -11,6 +11,8 @@ from UI_AddLayerWindow import Ui_AddLayerWindow
 import os
 import json
 import networkx as nx
+from ShowGraph import Graph
+import numpy as np
 
 class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
     def __init__(self):
@@ -21,12 +23,19 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.id_name = dict()
         self.name_id = dict()
         self.net = nx.Graph()
+        self.graph = Graph()
+        self.pos = list()
+        self.adj = list()
+        self.text = list()
         main_widget = QWidget()
         main_layout = QGridLayout()
         main_widget.setLayout(main_layout)
-        pw = pg.PlotWidget()
-        pw.plot([0,1,3,4,5], )
-        main_layout.addWidget(pw)
+        self.detail = QTextBrowser()
+        pw = pg.GraphicsLayoutWidget()
+        self.showgraph = pw.addViewBox()
+        self.showgraph.addItem(self.graph)
+        main_layout.addWidget(pw, 0, 0, 1, 2)
+        main_layout.addWidget(self.detail, 0, 2)
         self.setCentralWidget(main_widget)
     def add_layer(self):
         self.addlayer_window = AddLayerWindow(self.global_id)
@@ -41,13 +50,17 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 try:
                     layer = self.name_id[inputs[i]]
                     data['input'].append(layer)
+                    self.adj.append([data['ID'], layer])
                 except:
                     QMessageBox.warning(self, "错误", "输入来自未生成的层：{}".format(inputs[i]))
+        else:
+            self.adj.append([data['ID'], data['ID']])
         self.id_name[data['ID']] = data['name']
         self.name_id[data['name']] = data['ID']
         self.nodes.append(data)
-        print("data {} received".format(data['name']))
-
+        self.pos.append([10*data['ID'], 100])
+        self.text.append(data['name'])
+        self.graph.setData(pos=np.array(self.pos), adj=np.array(self.adj), size=20, text=self.text)
         
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
@@ -266,11 +279,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             send_data = False
         else:
             data['input'] = self.layerinput.text()
-        if self.layeroutput.text() == "":
-            QMessageBox.warning(self, "警告", "不合法输入：未指定层的输出")
-            send_data = False
-        else:
-            data['output'] = self.layeroutput.text()
+        data['isoutput'] = self.layeroutput.isChecked()
         data['para'] = dict()
         if self.layertype.currentIndex() == 1:
             try:
