@@ -13,6 +13,7 @@ import json
 import networkx as nx
 from ShowGraph import Graph
 import numpy as np
+import random
 
 class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
     def __init__(self):
@@ -23,7 +24,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.id_name = dict()
         self.name_id = dict()
         self.net = nx.Graph()
-        self.graph = Graph()
+        self.graph = Graph(self)
         self.pos = list()
         self.adj = list()
         self.text = list()
@@ -53,15 +54,21 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     self.adj.append([data['ID'], layer])
                 except:
                     QMessageBox.warning(self, "错误", "输入来自未生成的层：{}".format(inputs[i]))
+                    self.global_id -= 1
+                    return 0
         else:
             self.adj.append([data['ID'], data['ID']])
         self.id_name[data['ID']] = data['name']
         self.name_id[data['name']] = data['ID']
         self.nodes.append(data)
-        self.pos.append([10*data['ID'], 100])
+        if data['type'] == 1:
+            self.pos.append([100, 0])
+        else:
+            self.pos.append([self.pos[layer][0]+10, self.pos[layer][1]+random.randint(-15, 15)])
         self.text.append(data['name'])
         self.graph.setData(pos=np.array(self.pos), adj=np.array(self.adj), size=20, text=self.text)
-        
+    def show_detail(self):
+        print("A Ha!")
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
     datasignal = pyqtSignal(dict)

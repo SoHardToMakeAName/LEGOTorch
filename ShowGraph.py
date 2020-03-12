@@ -4,12 +4,12 @@ import numpy as np
 
 
 class Graph(pg.GraphItem):
-    def __init__(self):
+    def __init__(self, parent):
         self.dragPoint = None
         self.dragOffset = None
         self.textItems = []
         pg.GraphItem.__init__(self)
-        self.scatter.sigClicked.connect(self.clicked)
+        # self.scatter.sigClicked.connect(self.clicked)
 
     def setData(self, **kwds):
         self.text = kwds.pop('text', [])
