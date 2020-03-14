@@ -1,6 +1,9 @@
 
 from PyQt5 import QtWidgets
+from pyqtgraph.flowchart import Flowchart
+from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
+import pyqtgraph.metaarray as metaarray
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QRegExp
@@ -11,7 +14,6 @@ from UI_AddLayerWindow import Ui_AddLayerWindow
 import os
 import json
 import networkx as nx
-from ShowGraph import Graph
 import numpy as np
 import random
 
@@ -24,10 +26,11 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.id_name = dict()
         self.name_id = dict()
         self.net = nx.Graph()
-        self.graph = Graph(self)
-        self.pos = list()
-        self.adj = list()
-        self.text = list()
+        self.fc = Flowchart(terminals={
+            'dataIn': {'io': 'in'},
+            'dataOut': {'io': 'out'}
+        })
+        self.fcw = fc.Widget()
         main_widget = QWidget()
         main_layout = QGridLayout()
         main_widget.setLayout(main_layout)
@@ -60,15 +63,13 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             self.adj.append([data['ID'], data['ID']])
         self.id_name[data['ID']] = data['name']
         self.name_id[data['name']] = data['ID']
-        self.nodes.append(data)
+        self.nodes[data['ID']]
         if data['type'] == 1:
             self.pos.append([100, 0])
         else:
             self.pos.append([self.pos[layer][0]+10, self.pos[layer][1]+random.randint(-15, 15)])
         self.text.append(data['name'])
         self.graph.setData(pos=np.array(self.pos), adj=np.array(self.adj), size=20, text=self.text)
-    def show_detail(self):
-        print("A Ha!")
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
     datasignal = pyqtSignal(dict)
@@ -283,6 +284,10 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             data['type'] = self.layertype.currentIndex()
         if self.layerinput.text() == "":
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的输入")
+            send_data = False
+        elif self.layertype.currentIndex() != 9 & self.layertype.currentIndex() != 10 \
+                & self.layerinput.text().find(";") != -1:
+            QMessageBox.warning(self, "警告", "不合法输入：输入多于一个")
             send_data = False
         else:
             data['input'] = self.layerinput.text()
