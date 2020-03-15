@@ -22,7 +22,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         super(ModelWindow, self).__init__()
         self.setupUi(self)
         self.global_id = 0
-        self.nodes = list()
+        self.nodes = dict()
         self.id_name = dict()
         self.name_id = dict()
         self.net = nx.Graph()
@@ -34,12 +34,9 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         main_widget = QWidget()
         main_layout = QGridLayout()
         main_widget.setLayout(main_layout)
-        self.detail = QTextBrowser()
-        pw = pg.GraphicsLayoutWidget()
-        self.showgraph = pw.addViewBox()
-        self.showgraph.addItem(self.graph)
-        main_layout.addWidget(pw, 0, 0, 1, 2)
-        main_layout.addWidget(self.detail, 0, 2)
+        self.detail = QTreeWidget()
+        self.detail.setColumnCount(2)
+        self.detail.setHeaderLabels(["属性", "值"])
         self.setCentralWidget(main_widget)
     def add_layer(self):
         self.addlayer_window = AddLayerWindow(self.global_id)
@@ -63,7 +60,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             self.adj.append([data['ID'], data['ID']])
         self.id_name[data['ID']] = data['name']
         self.name_id[data['name']] = data['ID']
-        self.nodes[data['ID']]
+        self.nodes[data['name']] = data
         if data['type'] == 1:
             self.pos.append([100, 0])
         else:
@@ -294,11 +291,11 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
         data['isoutput'] = self.layeroutput.isChecked()
         data['para'] = dict()
         if self.layertype.currentIndex() == 1:
-            try:
-                data['para']['size'] = (int(self.sizec.text()), int(self.sizeh.text()), int(self.sizew.text()))
-            except:
-                QMessageBox.warning(self, "警告", "不合法输入：输入维度均应为正整数")
-                send_data = False
+            # try:
+            #     data['para']['size'] = (int(self.sizec.text()), int(self.sizeh.text()), int(self.sizew.text()))
+            # except:
+            #     QMessageBox.warning(self, "警告", "不合法输入：输入维度均应为正整数")
+            #     send_data = False
         elif self.layertype.currentIndex() == 2:
             try:
                 data['para']['outchannels'] = int(self.outchannels.text())
@@ -316,7 +313,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
                 QMessageBox.warning(self, "警告", "不合法输入：stride参数均应为正整数")
                 send_data = False
             try:
-                data['para']['kernel'] = (int(self.padding_1.text()), int(self.padding_2.text()))
+                data['para']['padding'] = (int(self.padding_1.text()), int(self.padding_2.text()))
             except:
                 QMessageBox.warning(self, "警告", "不合法输入：padding参数均应为正整数")
                 send_data = False
