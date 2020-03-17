@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets
 from pyqtgraph.flowchart import Flowchart
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-import pyqtgraph.metaarray as metaarray
+import pyqtgraph.flowchart.library as fclib
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QRegExp
@@ -16,6 +16,7 @@ import json
 import networkx as nx
 import numpy as np
 import random
+from FCNodes import CovNode
 
 class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
     def __init__(self):
@@ -26,17 +27,24 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.id_name = dict()
         self.name_id = dict()
         self.net = nx.Graph()
+        self.library = fclib.LIBRARY.copy()
+        self.library.addNodeType(CovNode, [('CovNode', )])
         self.fc = Flowchart(terminals={
             'dataIn': {'io': 'in'},
             'dataOut': {'io': 'out'}
         })
-        self.fcw = fc.Widget()
+        self.fc.setLibrary(self.library)
+        w = self.fc.widget()
         main_widget = QWidget()
         main_layout = QGridLayout()
         main_widget.setLayout(main_layout)
         self.detail = QTreeWidget()
         self.detail.setColumnCount(2)
         self.detail.setHeaderLabels(["属性", "值"])
+        self.root = QTreeWidgetItem(self.detail)
+        self.root.setText(0, "所有属性")
+        main_layout.addWidget(self.fc.widget(), 0, 0, 1, 2)
+        main_layout.addWidget(self.detail, 0, 2)
         self.setCentralWidget(main_widget)
     def add_layer(self):
         self.addlayer_window = AddLayerWindow(self.global_id)
@@ -51,22 +59,23 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 try:
                     layer = self.name_id[inputs[i]]
                     data['input'].append(layer)
-                    self.adj.append([data['ID'], layer])
                 except:
                     QMessageBox.warning(self, "错误", "输入来自未生成的层：{}".format(inputs[i]))
                     self.global_id -= 1
                     return 0
-        else:
-            self.adj.append([data['ID'], data['ID']])
         self.id_name[data['ID']] = data['name']
         self.name_id[data['name']] = data['ID']
         self.nodes[data['name']] = data
         if data['type'] == 1:
-            self.pos.append([100, 0])
-        else:
-            self.pos.append([self.pos[layer][0]+10, self.pos[layer][1]+random.randint(-15, 15)])
-        self.text.append(data['name'])
-        self.graph.setData(pos=np.array(self.pos), adj=np.array(self.adj), size=20, text=self.text)
+            self.fc.setInput(dataIn=np.array(data['para']['size']))
+        elif data['type'] == 2:
+            node = CovNode(data['name'])
+            node.setPara(data['para'])
+            node.setResView(self.root)
+            self.fc.addNode(node, data['name'])
+            if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
+                self.fc.connectTerminals(self.fc['dataIn'], node['dataIn'])
+        # self.fc.connectTerminals(node['dataOut'], )
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
     datasignal = pyqtSignal(dict)
@@ -283,7 +292,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的输入")
             send_data = False
         elif self.layertype.currentIndex() != 9 & self.layertype.currentIndex() != 10 \
-                & self.layerinput.text().find(";") != -1:
+                & len(self.layerinput.text().split(";")) > 1:
             QMessageBox.warning(self, "警告", "不合法输入：输入多于一个")
             send_data = False
         else:
@@ -291,11 +300,11 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
         data['isoutput'] = self.layeroutput.isChecked()
         data['para'] = dict()
         if self.layertype.currentIndex() == 1:
-            # try:
-            #     data['para']['size'] = (int(self.sizec.text()), int(self.sizeh.text()), int(self.sizew.text()))
-            # except:
-            #     QMessageBox.warning(self, "警告", "不合法输入：输入维度均应为正整数")
-            #     send_data = False
+            try:
+                data['para']['size'] = (int(self.sizec.text()), int(self.sizeh.text()), int(self.sizew.text()))
+            except:
+                QMessageBox.warning(self, "警告", "不合法输入：输入维度均应为正整数")
+                send_data = False
         elif self.layertype.currentIndex() == 2:
             try:
                 data['para']['outchannels'] = int(self.outchannels.text())
