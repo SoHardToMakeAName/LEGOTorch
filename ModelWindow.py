@@ -16,7 +16,7 @@ import json
 import networkx as nx
 import numpy as np
 import random
-from FCNodes import CovNode
+from FCNodes import CovNode, PoolNode
 
 class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
     def __init__(self):
@@ -69,13 +69,19 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         if data['type'] == 1:
             self.fc.setInput(dataIn=np.array(data['para']['size']))
         elif data['type'] == 2:
-            node = CovNode(data['name'])
+            node = self.fc.createNode('Cov2d', name=data['name'], pos=(data['input'][0]*25, data['ID']*150-500))
             node.setPara(data['para'])
-            node.setResView(self.root)
-            self.fc.addNode(node, data['name'])
+            node.setView(self.root)
             if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
                 self.fc.connectTerminals(self.fc['dataIn'], node['dataIn'])
-        # self.fc.connectTerminals(node['dataOut'], )
+            else:
+                self.fc.connectTerminals(self.nodes[self.id_name(data['input'][0])], node['dataIn'])
+        elif data['type'] == 3:
+            node = self.fc.createNode('Cov2d', name=data['name'], pos=(data['input'][0] * 25, data['ID'] * 150 - 500))
+            node.setPara(data['para'])
+            node.setView(self.root)
+            if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
+                self.fc.connectTerminals(self.fc['dataIn'], node['dataIn'])
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
     datasignal = pyqtSignal(dict)
