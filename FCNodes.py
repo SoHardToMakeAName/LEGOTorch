@@ -94,3 +94,39 @@ class PoolNode(Node):
             attr.setText(1, str(v))
             self.child.addChild(attr)
         return {'dataOut': output}
+
+
+class LinearNode(Node):
+    nodeName = 'Linear'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataIn': dict(io='in'), 'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, dataIn):
+        size_in = 1
+        for i in range(dataIn.shape[0]):
+            size_in = size_in * dataIn[i]
+        size_out = self.para['out_features']
+        self.para['in_size'] = size_in
+        self.para['out_size'] = size_out
+        output = np.array(size_out)
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
+

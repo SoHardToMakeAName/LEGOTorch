@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'UI_ModelWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.0
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -42,12 +42,15 @@ class Ui_ModelWindow(object):
         self.AddLayer.setObjectName("AddLayer")
         self.AddModel = QtWidgets.QAction(ModelWindow)
         self.AddModel.setObjectName("AddModel")
+        self.action = QtWidgets.QAction(ModelWindow)
+        self.action.setObjectName("action")
         self.Function.addAction(self.ToDataset)
         self.Function.addAction(self.ToTrain)
         self.FileSet.addAction(self.InportFile)
         self.FileSet.addAction(self.ExportFile)
         self.Add.addAction(self.AddLayer)
         self.Add.addAction(self.AddModel)
+        self.Add.addAction(self.action)
         self.menubar.addAction(self.Function.menuAction())
         self.menubar.addAction(self.FileSet.menuAction())
         self.menubar.addAction(self.Add.menuAction())
@@ -60,11 +63,12 @@ class Ui_ModelWindow(object):
         _translate = QtCore.QCoreApplication.translate
         ModelWindow.setWindowTitle(_translate("ModelWindow", "模型"))
         self.Function.setTitle(_translate("ModelWindow", "功能"))
-        self.FileSet.setTitle(_translate("ModelWindow", "文件"))
-        self.Add.setTitle(_translate("ModelWindow", "新建"))
+        self.FileSet.setTitle(_translate("ModelWindow", "脚本"))
+        self.Add.setTitle(_translate("ModelWindow", "层"))
         self.ToDataset.setText(_translate("ModelWindow", "数据集"))
         self.ToTrain.setText(_translate("ModelWindow", "训练"))
         self.InportFile.setText(_translate("ModelWindow", "导入"))
         self.ExportFile.setText(_translate("ModelWindow", "导出"))
-        self.AddLayer.setText(_translate("ModelWindow", "层"))
-        self.AddModel.setText(_translate("ModelWindow", "模型"))
+        self.AddLayer.setText(_translate("ModelWindow", "新建"))
+        self.AddModel.setText(_translate("ModelWindow", "更改"))
+        self.action.setText(_translate("ModelWindow", "删除"))

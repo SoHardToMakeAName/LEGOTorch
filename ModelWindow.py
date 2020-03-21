@@ -26,7 +26,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.nodes = dict()
         self.id_name = dict()
         self.name_id = dict()
-        self.net = nx.Graph()
+        self.net = nx.DiGraph()
         self.library = fclib.LIBRARY.copy()
         self.library.addNodeType(CovNode, [('CovNode', )])
         self.fc = Flowchart(terminals={
@@ -47,8 +47,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         main_layout.addWidget(self.detail, 0, 2)
         self.setCentralWidget(main_widget)
     def add_layer(self):
-        self.addlayer_window = AddLayerWindow(self.global_id)
-        self.global_id += 1
+        self.addlayer_window = AddLayerWindow()
         self.addlayer_window.datasignal.connect(self.accept_layer)
         self.addlayer_window.show()
     def accept_layer(self, data):
@@ -61,10 +60,24 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     data['input'].append(layer)
                 except:
                     QMessageBox.warning(self, "错误", "输入来自未生成的层：{}".format(inputs[i]))
-                    self.global_id -= 1
                     return 0
-        self.id_name[data['ID']] = data['name']
-        self.name_id[data['name']] = data['ID']
+        if data['name'] in self.name_id.keys():
+            id = self.name_id[data['name']]
+            self.net.remove_node(id)
+            self.net.add_node(id)
+            self.net.nodes[id]['name'] = data['name']
+            for i in data['input']:
+                self.net.add_edge(i, id)
+            self.fc.removeNode(self.fc.nodes()[data['name']])
+        else:
+            data['ID'] = self.global_id
+            self.name_id[data['name']] = self.global_id
+            self.id_name[self.global_id] = data['name']
+            self.net.add_node(self.global_id)
+            self.net.nodes[self.global_id]['name'] = data['name']
+            for i in data['input']:
+                self.net.add_edge(i, self.global_id)
+            self.global_id += 1
         self.nodes[data['name']] = data
         if data['type'] == 1:
             self.fc.setInput(dataIn=np.array(data['para']['size']))
@@ -76,21 +89,14 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 self.fc.connectTerminals(self.fc['dataIn'], node['dataIn'])
             else:
                 self.fc.connectTerminals(self.nodes[self.id_name(data['input'][0])], node['dataIn'])
-        elif data['type'] == 3:
-            node = self.fc.createNode('Cov2d', name=data['name'], pos=(data['input'][0] * 25, data['ID'] * 150 - 500))
-            node.setPara(data['para'])
-            node.setView(self.root)
-            if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
-                self.fc.connectTerminals(self.fc['dataIn'], node['dataIn'])
+
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
     datasignal = pyqtSignal(dict)
-    def __init__(self, global_id):
+    def __init__(self):
         super(AddLayerWindow, self).__init__()
         self.setupUi(self)
         self.setFixedSize(433, 374)
-        self.id = global_id
-        self.setWindowTitle("ID:{}".format(str(self.id)))
     def fill_content(self):
         while self.content.count():
             child = self.content.takeAt(0)
@@ -283,7 +289,6 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
     def gen_layer(self):
         send_data = True
         data = dict()
-        data['ID'] = self.id
         if self.layername.text() == "":
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的名字")
             send_data = False
