@@ -29,12 +29,10 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.net = nx.DiGraph()
         self.library = fclib.LIBRARY.copy()
         self.library.addNodeType(CovNode, [('CovNode', )])
-        self.fc = Flowchart(terminals={
-            'dataIn': {'io': 'in'},
-            'dataOut': {'io': 'out'}
-        })
+        self.fc = Flowchart()
         self.fc.setLibrary(self.library)
         w = self.fc.widget()
+        self.fc_inputs = dict()
         main_widget = QWidget()
         main_layout = QGridLayout()
         main_widget.setLayout(main_layout)
@@ -61,6 +59,8 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 except:
                     QMessageBox.warning(self, "错误", "输入来自未生成的层：{}".format(inputs[i]))
                     return 0
+        else:
+            data['input'] = [-1]
         if data['name'] in self.name_id.keys():
             id = self.name_id[data['name']]
             self.net.remove_node(id)
@@ -80,15 +80,18 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             self.global_id += 1
         self.nodes[data['name']] = data
         if data['type'] == 1:
-            self.fc.setInput(dataIn=np.array(data['para']['size']))
+            self.fc.addInput(data['name'])
+            self.fc_inputs[data['name']] = data['para']['size']
+            self.fc.setInput(**self.fc_inputs)
         elif data['type'] == 2:
-            node = self.fc.createNode('Cov2d', name=data['name'], pos=(data['input'][0]*25, data['ID']*150-500))
+            node = self.fc.createNode('Cov2d', name=data['name'], pos=(data['input'][0]*100, data['ID']*150-500))
             node.setPara(data['para'])
             node.setView(self.root)
             if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
-                self.fc.connectTerminals(self.fc['dataIn'], node['dataIn'])
+                self.fc.connectTerminals(self.fc[self.id_name[data['input'][0]]], node['dataIn'])
             else:
-                self.fc.connectTerminals(self.nodes[self.id_name(data['input'][0])], node['dataIn'])
+                self.fc.connectTerminals(self.fc.nodes()[self.id_name[data['input'][0]]]['dataOut'], node['dataIn'])
+
 
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
