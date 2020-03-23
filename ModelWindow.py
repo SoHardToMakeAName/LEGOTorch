@@ -1,4 +1,3 @@
-
 from PyQt5 import QtWidgets
 from pyqtgraph.flowchart import Flowchart
 from pyqtgraph.Qt import QtGui, QtCore
@@ -16,7 +15,8 @@ import json
 import networkx as nx
 import numpy as np
 import random
-from FCNodes import CovNode, PoolNode
+from FCNodes import CovNode, PoolNode, LinearNode, ConcatNode
+
 
 class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
     def __init__(self):
@@ -28,7 +28,10 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.name_id = dict()
         self.net = nx.DiGraph()
         self.library = fclib.LIBRARY.copy()
-        self.library.addNodeType(CovNode, [('CovNode', )])
+        self.library.addNodeType(CovNode, [('CovNode',)])
+        self.library.addNodeType(PoolNode, [('PoolNode',)])
+        self.library.addNodeType(LinearNode, [('LinearNode',)])
+        self.library.addNodeType(ConcatNode, [('ConcatNode',)])
         self.fc = Flowchart()
         self.fc.setLibrary(self.library)
         w = self.fc.widget()
@@ -44,10 +47,12 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         main_layout.addWidget(self.fc.widget(), 0, 0, 1, 2)
         main_layout.addWidget(self.detail, 0, 2)
         self.setCentralWidget(main_widget)
+
     def add_layer(self):
         self.addlayer_window = AddLayerWindow()
         self.addlayer_window.datasignal.connect(self.accept_layer)
         self.addlayer_window.show()
+
     def accept_layer(self, data):
         if not data['type'] == 1:
             inputs = data['input'].split(";")
@@ -61,6 +66,14 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     return 0
         else:
             data['input'] = [-1]
+        if data['type'] == 9:
+            layer_id = data['input'][0]
+            cur_size = self.nodes[self.id_name[layer_id]]
+            for layer_id in data['input']:
+                layer = self.nodes[self.id_name[layer_id]]
+                if layer['para']['out_size'] != cur_size:
+                    QMessageBox.warning(self, "错误", "输入尺寸不匹配")
+                    return 0
         if data['name'] in self.name_id.keys():
             id = self.name_id[data['name']]
             self.net.remove_node(id)
@@ -84,22 +97,38 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             self.fc_inputs[data['name']] = data['para']['size']
             self.fc.setInput(**self.fc_inputs)
         elif data['type'] == 2:
-            node = self.fc.createNode('Cov2d', name=data['name'], pos=(data['input'][0]*100, data['ID']*150-500))
+            node = self.fc.createNode('Cov2d', name=data['name'], pos=(data['input'][0] * 100, data['ID'] * 150 - 500))
             node.setPara(data['para'])
             node.setView(self.root)
             if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
                 self.fc.connectTerminals(self.fc[self.id_name[data['input'][0]]], node['dataIn'])
             else:
                 self.fc.connectTerminals(self.fc.nodes()[self.id_name[data['input'][0]]]['dataOut'], node['dataIn'])
-
+            if data['isoutput']:
+                self.fc.addOutput(data['name'])
+                self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
+        elif data['type'] == 10:
+            node = self.fc.createNode('Concat', name=data['name'], pos=(data['input'][0] * 100, data['ID'] * 150 - 500))
+            node.setPara(data['para'])
+            node.setView(self.root)
+            for i in data['input']:
+                in_name = self.id_name[i]
+                in_size = self.nodes[in_name]['para']['out_size']
+                node.addInput(in_name)
+                self.fc.connectTerminals(self.fc.nodes()[in_name]['dataOut'], node[in_name])
+            if data['isoutput']:
+                self.fc.addOutput(data['name'])
+                self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
 
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
     datasignal = pyqtSignal(dict)
+
     def __init__(self):
         super(AddLayerWindow, self).__init__()
         self.setupUi(self)
         self.setFixedSize(433, 374)
+
     def fill_content(self):
         while self.content.count():
             child = self.content.takeAt(0)
@@ -305,8 +334,8 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
         if self.layerinput.text() == "":
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的输入")
             send_data = False
-        elif self.layertype.currentIndex() != 9 & self.layertype.currentIndex() != 10 \
-                & len(self.layerinput.text().split(";")) > 1:
+        elif self.layertype.currentIndex() != 9 and self.layertype.currentIndex() != 10 \
+                and len(self.layerinput.text().split(";")) > 1:
             QMessageBox.warning(self, "警告", "不合法输入：输入多于一个")
             send_data = False
         else:
@@ -435,8 +464,9 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.destroy()
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     myshow = ModelWindow()
     myshow.show()

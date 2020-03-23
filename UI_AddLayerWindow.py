@@ -45,6 +45,8 @@ class Ui_AddLayerWindow(object):
         self.layertype.addItem("")
         self.layertype.addItem("")
         self.layertype.addItem("")
+        self.layertype.addItem("")
+        self.layertype.addItem("")
         self.profile.addWidget(self.layertype, 0, 4, 1, 1)
         self.label_2 = QtWidgets.QLabel(self.gridLayoutWidget)
         self.label_2.setObjectName("label_2")

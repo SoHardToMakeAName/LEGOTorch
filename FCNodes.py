@@ -130,3 +130,39 @@ class LinearNode(Node):
             self.child.addChild(attr)
         return {'dataOut': output}
 
+
+class ConcatNode(Node):
+    nodeName = 'Concat'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals, allowAddInput=True)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, **kargs):
+        c, max_h, max_w = 0, 0, 0
+        for k, v in kargs.items():
+            c += v[0]
+            if max_h < v[1]:
+                max_h = v[1]
+            if max_w < v[2]:
+                max_w = v[2]
+        self.para['out_size'] = (c, max_h, max_w)
+        output = np.array(self.para['out_size'])
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
