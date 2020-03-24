@@ -132,7 +132,7 @@ class LinearNode(Node):
 
 
 class ConcatNode(Node):
-    nodeName = 'Concat'
+    nodeName = 'Concat2d'
 
     def __init__(self, name):
         self.view = None
@@ -156,6 +156,198 @@ class ConcatNode(Node):
             if max_w < v[2]:
                 max_w = v[2]
         self.para['out_size'] = (c, max_h, max_w)
+        output = np.array(self.para['out_size'])
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
+
+
+class Concat1dNode(Node):
+    nodeName = 'Concat1d'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals, allowAddInput=True)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, **kargs):
+        size = 0
+        for k, v in kargs.items():
+            size += v[0]
+        self.para['out_size'] = size
+        output = np.array(size)
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
+
+
+class SoftmaxNode(Node):
+    nodeName = 'Softmax'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataIn': dict(io='in'), 'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, dataIn):
+        size_in = dataIn[0]
+        self.para['in_size'] = size_in
+        self.para['out_size'] = size_in
+        output = np.array(size_in)
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
+
+
+class LogSoftmaxNode(Node):
+    nodeName = 'LogSoftmax'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataIn': dict(io='in'), 'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, dataIn):
+        size_in = dataIn[0]
+        self.para['in_size'] = size_in
+        self.para['out_size'] = size_in
+        output = np.array(size_in)
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
+
+
+class BachNorm1dNode(Node):
+    nodeName = 'BachNorm1d'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataIn': dict(io='in'), 'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, dataIn):
+        size_in = dataIn[0]
+        self.para['in_size'] = size_in
+        self.para['out_size'] = size_in
+        output = np.array(size_in)
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
+
+
+class BachNorm2dNode(Node):
+    nodeName = 'BachNorm2d'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataIn': dict(io='in'), 'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, dataIn):
+        size_in = dataIn[0]
+        self.para['in_size'] = size_in
+        self.para['out_size'] = size_in
+        output = np.array(size_in)
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
+
+
+class AddNode(Node):
+    nodeName = 'Add'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals, allowAddInput=True)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, **kargs):
+        c, h, w = kargs.items()[0][1]
+        self.para['out_size'] = (c, h, w)
         output = np.array(self.para['out_size'])
         self.child = QTreeWidgetItem()
         self.child.setText(0, self.thisname)

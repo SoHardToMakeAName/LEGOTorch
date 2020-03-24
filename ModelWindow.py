@@ -15,7 +15,8 @@ import json
 import networkx as nx
 import numpy as np
 import random
-from FCNodes import CovNode, PoolNode, LinearNode, ConcatNode
+from FCNodes import CovNode, PoolNode, LinearNode, ConcatNode, Concat1dNode, SoftmaxNode, \
+    LogSoftmaxNode, BachNorm1dNode, BachNorm2dNode, AddNode
 
 
 class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
@@ -32,6 +33,14 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.library.addNodeType(PoolNode, [('PoolNode',)])
         self.library.addNodeType(LinearNode, [('LinearNode',)])
         self.library.addNodeType(ConcatNode, [('ConcatNode',)])
+        self.library.addNodeType(Concat1dNode, [('Concat1dNode',)])
+        self.library.addNodeType(SoftmaxNode, [('SoftmaxNode',)])
+        self.library.addNodeType(LogSoftmaxNode, [('LogSoftmaxNode',)])
+        self.library.addNodeType(BachNorm1dNode, [('BachNorm1dNode',)])
+        self.library.addNodeType(BachNorm2dNode, [('BachNorm2dNode',)])
+        self.library.addNodeType(AddNode, [('AddNode',)])
+        self.type_name = {2:'Cov2d', 3:'Pool2d', 4:'Linear', 5:'Softmax', 6:'LogSoftmax', 7:'BachNorm1d',
+                          8:'BachNorm2d', 9:'Add', 10:'Concat2d', 11: 'Concat1d'}
         self.fc = Flowchart()
         self.fc.setLibrary(self.library)
         w = self.fc.widget()
@@ -60,6 +69,15 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             for i in range(len(inputs)):
                 try:
                     layer = self.name_id[inputs[i]]
+                    if data['type'] == 3 and (self.nodes[inputs[i]]['type'] not in [2, 8, 9, 10]):
+                        QMessageBox.warning(self, "错误", "输入：{}层类型不合法".format(inputs[i]))
+                        return 0
+                    elif (data['type'] in [5, 6, 7, 11]) and (self.nodes[inputs[i]]['type'] not in [4, 7]):
+                        QMessageBox.warning(self, "错误", "输入：{}层类型不合法".format(inputs[i]))
+                        return 0
+                    elif (data['type'] in [2, 8, 10]) and (self.nodes[inputs[i]]['type'] not in [1, 2, 3, 8, 9, 10]):
+                        QMessageBox.warning(self, "错误", "输入：{}层类型不合法".format(inputs[i]))
+                        return 0
                     data['input'].append(layer)
                 except:
                     QMessageBox.warning(self, "错误", "输入来自未生成的层：{}".format(inputs[i]))
@@ -96,19 +114,9 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             self.fc.addInput(data['name'])
             self.fc_inputs[data['name']] = data['para']['size']
             self.fc.setInput(**self.fc_inputs)
-        elif data['type'] == 2:
-            node = self.fc.createNode('Cov2d', name=data['name'], pos=(data['input'][0] * 100, data['ID'] * 150 - 500))
-            node.setPara(data['para'])
-            node.setView(self.root)
-            if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
-                self.fc.connectTerminals(self.fc[self.id_name[data['input'][0]]], node['dataIn'])
-            else:
-                self.fc.connectTerminals(self.fc.nodes()[self.id_name[data['input'][0]]]['dataOut'], node['dataIn'])
-            if data['isoutput']:
-                self.fc.addOutput(data['name'])
-                self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
-        elif data['type'] == 10:
-            node = self.fc.createNode('Concat', name=data['name'], pos=(data['input'][0] * 100, data['ID'] * 150 - 500))
+        elif data['type'] in [9, 10, 11]:
+            node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
+                                      pos=(data['input'][0] * 100, data['ID'] * 150 - 500))
             node.setPara(data['para'])
             node.setView(self.root)
             for i in data['input']:
@@ -116,6 +124,18 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 in_size = self.nodes[in_name]['para']['out_size']
                 node.addInput(in_name)
                 self.fc.connectTerminals(self.fc.nodes()[in_name]['dataOut'], node[in_name])
+            if data['isoutput']:
+                self.fc.addOutput(data['name'])
+                self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
+        else:
+            node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
+                                          pos=(data['input'][0] * 100, data['ID'] * 150 - 500))
+            node.setPara(data['para'])
+            node.setView(self.root)
+            if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
+                self.fc.connectTerminals(self.fc[self.id_name[data['input'][0]]], node['dataIn'])
+            else:
+                self.fc.connectTerminals(self.fc.nodes()[self.id_name[data['input'][0]]]['dataOut'], node['dataIn'])
             if data['isoutput']:
                 self.fc.addOutput(data['name'])
                 self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
