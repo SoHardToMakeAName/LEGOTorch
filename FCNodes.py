@@ -187,7 +187,7 @@ class Concat1dNode(Node):
     def process(self, **kargs):
         size = 0
         for k, v in kargs.items():
-            size += v[0]
+            size += v
         self.para['out_size'] = size
         output = np.array(size)
         self.child = QTreeWidgetItem()
@@ -218,7 +218,7 @@ class SoftmaxNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        size_in = dataIn[0]
+        size_in = dataIn
         self.para['in_size'] = size_in
         self.para['out_size'] = size_in
         output = np.array(size_in)
@@ -250,7 +250,7 @@ class LogSoftmaxNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        size_in = dataIn[0]
+        size_in = dataIn
         self.para['in_size'] = size_in
         self.para['out_size'] = size_in
         output = np.array(size_in)
@@ -282,7 +282,7 @@ class BachNorm1dNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        size_in = dataIn[0]
+        size_in = dataIn
         self.para['in_size'] = size_in
         self.para['out_size'] = size_in
         output = np.array(size_in)
@@ -314,10 +314,10 @@ class BachNorm2dNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        size_in = dataIn[0]
+        size_in = dataIn
         self.para['in_size'] = size_in
         self.para['out_size'] = size_in
-        output = np.array(size_in)
+        output = size_in
         self.child = QTreeWidgetItem()
         self.child.setText(0, self.thisname)
         self.view.addChild(self.child)
@@ -330,7 +330,7 @@ class BachNorm2dNode(Node):
 
 
 class AddNode(Node):
-    nodeName = 'Add'
+    nodeName = 'Res_Add'
 
     def __init__(self, name):
         self.view = None
@@ -346,7 +346,7 @@ class AddNode(Node):
         self.para = para
 
     def process(self, **kargs):
-        c, h, w = kargs.items()[0][1]
+        c, h, w = kargs.popitem()[1]
         self.para['out_size'] = (c, h, w)
         output = np.array(self.para['out_size'])
         self.child = QTreeWidgetItem()

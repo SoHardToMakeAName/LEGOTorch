@@ -38,9 +38,9 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.library.addNodeType(LogSoftmaxNode, [('LogSoftmaxNode',)])
         self.library.addNodeType(BachNorm1dNode, [('BachNorm1dNode',)])
         self.library.addNodeType(BachNorm2dNode, [('BachNorm2dNode',)])
-        self.library.addNodeType(AddNode, [('AddNode',)])
+        self.library.addNodeType(AddNode, [('ResAddNode',)])
         self.type_name = {2:'Cov2d', 3:'Pool2d', 4:'Linear', 5:'Softmax', 6:'LogSoftmax', 7:'BachNorm1d',
-                          8:'BachNorm2d', 9:'Add', 10:'Concat2d', 11: 'Concat1d'}
+                          8:'BachNorm2d', 9:'Res_Add', 10:'Concat2d', 11: 'Concat1d'}
         self.fc = Flowchart()
         self.fc.setLibrary(self.library)
         w = self.fc.widget()
@@ -72,7 +72,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     if data['type'] == 3 and (self.nodes[inputs[i]]['type'] not in [2, 8, 9, 10]):
                         QMessageBox.warning(self, "错误", "输入：{}层类型不合法".format(inputs[i]))
                         return 0
-                    elif (data['type'] in [5, 6, 7, 11]) and (self.nodes[inputs[i]]['type'] not in [4, 7]):
+                    elif (data['type'] in [5, 6, 7, 11]) and (self.nodes[inputs[i]]['type'] not in [4, 7, 11]):
                         QMessageBox.warning(self, "错误", "输入：{}层类型不合法".format(inputs[i]))
                         return 0
                     elif (data['type'] in [2, 8, 10]) and (self.nodes[inputs[i]]['type'] not in [1, 2, 3, 8, 9, 10]):
@@ -86,7 +86,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             data['input'] = [-1]
         if data['type'] == 9:
             layer_id = data['input'][0]
-            cur_size = self.nodes[self.id_name[layer_id]]
+            cur_size = self.nodes[self.id_name[layer_id]]['para']['out_size']
             for layer_id in data['input']:
                 layer = self.nodes[self.id_name[layer_id]]
                 if layer['para']['out_size'] != cur_size:
@@ -116,7 +116,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             self.fc.setInput(**self.fc_inputs)
         elif data['type'] in [9, 10, 11]:
             node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
-                                      pos=(data['input'][0] * 100, data['ID'] * 150 - 500))
+                                      pos=(data['input'][0] * 120, (data['ID'] - data['input'][0]) * 150 - 500))
             node.setPara(data['para'])
             node.setView(self.root)
             for i in data['input']:
@@ -129,7 +129,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
         else:
             node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
-                                          pos=(data['input'][0] * 100, data['ID'] * 150 - 500))
+                                          pos=(data['input'][0] * 120, (data['ID'] - data['input'][0]) * 150 - 500))
             node.setPara(data['para'])
             node.setView(self.root)
             if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
@@ -354,7 +354,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
         if self.layerinput.text() == "":
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的输入")
             send_data = False
-        elif self.layertype.currentIndex() != 9 and self.layertype.currentIndex() != 10 \
+        elif self.layertype.currentIndex() not in [9, 10, 11] \
                 and len(self.layerinput.text().split(";")) > 1:
             QMessageBox.warning(self, "警告", "不合法输入：输入多于一个")
             send_data = False
@@ -425,7 +425,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
                 QMessageBox.warning(self, "警告", "不合法输入：stride参数均应为正整数")
                 send_data = False
             try:
-                data['para']['kernel'] = (int(self.padding_1.text()), int(self.padding_2.text()))
+                data['para']['padding'] = (int(self.padding_1.text()), int(self.padding_2.text()))
             except:
                 QMessageBox.warning(self, "警告", "不合法输入：padding参数均应为正整数")
                 send_data = False
