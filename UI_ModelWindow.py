@@ -57,6 +57,7 @@ class Ui_ModelWindow(object):
 
         self.retranslateUi(ModelWindow)
         self.AddLayer.triggered.connect(ModelWindow.add_layer)
+        self.ExportFile.triggered.connect(ModelWindow.export_file)
         QtCore.QMetaObject.connectSlotsByName(ModelWindow)
 
     def retranslateUi(self, ModelWindow):

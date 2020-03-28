@@ -36,6 +36,7 @@
     </property>
     <addaction name="InportFile"/>
     <addaction name="ExportFile"/>
+    <addaction name="ExportWithoutCheck"/>
    </widget>
    <widget class="QMenu" name="Add">
     <property name="title">
@@ -85,6 +86,11 @@
     <string>删除</string>
    </property>
   </action>
+  <action name="ExportWithoutCheck">
+   <property name="text">
+    <string>导出但不检查</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
@@ -104,8 +110,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>ExportFile</sender>
+   <signal>triggered()</signal>
+   <receiver>ModelWindow</receiver>
+   <slot>export_file()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>319</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>add_layer()</slot>
+  <slot>export_file()</slot>
  </slots>
 </ui>

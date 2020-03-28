@@ -43,6 +43,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                           8:'BachNorm2d', 9:'Res_Add', 10:'Concat2d', 11: 'Concat1d'}
         self.fc = Flowchart()
         self.fc.setLibrary(self.library)
+        self.outputs = list()
         w = self.fc.widget()
         self.fc_inputs = dict()
         main_widget = QWidget()
@@ -83,7 +84,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     QMessageBox.warning(self, "错误", "输入来自未生成的层：{}".format(inputs[i]))
                     return 0
         else:
-            data['input'] = [-1]
+            data['input'] = list()
         if data['type'] == 9:
             layer_id = data['input'][0]
             cur_size = self.nodes[self.id_name[layer_id]]['para']['out_size']
@@ -96,16 +97,15 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             id = self.name_id[data['name']]
             self.net.remove_node(id)
             self.net.add_node(id)
-            self.net.nodes[id]['name'] = data['name']
             for i in data['input']:
                 self.net.add_edge(i, id)
             self.fc.removeNode(self.fc.nodes()[data['name']])
+            data['ID'] = id
         else:
             data['ID'] = self.global_id
             self.name_id[data['name']] = self.global_id
             self.id_name[self.global_id] = data['name']
             self.net.add_node(self.global_id)
-            self.net.nodes[self.global_id]['name'] = data['name']
             for i in data['input']:
                 self.net.add_edge(i, self.global_id)
             self.global_id += 1
@@ -139,6 +139,28 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             if data['isoutput']:
                 self.fc.addOutput(data['name'])
                 self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
+        if data['isoutput']:
+            self.outputs.append(data['ID'])
+
+    def export_file(self):
+        filename, _ = QFileDialog.getSaveFileName(self, '导出模型', 'C:\\', 'Python Files (*.py)')
+        filedir, filename_text = os.path.split(filename)
+        filename_text = filename_text.split(".")[0]
+        sort = self.check()
+        if sort is None:
+            print("Invalid Network!")
+        content = list()
+        for id in sort:
+            content.append(self.nodes[self.id_name[id]])
+        with open(filedir+filename_text+".json", 'w') as f1:
+            json.dump(content, f1)
+        with open(filename, 'w') as f:
+            f.write('import torch\nimport torch.nn as nn\nimport torch.nn.Functional as F\n')
+
+    def check(self):
+        if len(self.outputs) == 0:
+            return None
+        return list(nx.topological_sort(self.net))
 
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
