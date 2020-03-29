@@ -25,9 +25,9 @@ class CovNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        c_in = dataIn[0]
-        h_in = dataIn[1]
-        w_in = dataIn[2]
+        c_in = int(dataIn[0])
+        h_in = int(dataIn[1])
+        w_in = int(dataIn[2])
         kernel_h, kernel_w = self.para['kernel']
         padding_h, padding_w = self.para['padding']
         if self.para['dilation'] is not None:
@@ -69,19 +69,16 @@ class PoolNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        c_in = dataIn[0]
-        h_in = dataIn[1]
-        w_in = dataIn[2]
+        c_in = int(dataIn[0])
+        h_in = int(dataIn[1])
+        w_in = int(dataIn[2])
         kernel_h, kernel_w = self.para['kernel']
         padding_h, padding_w = self.para['padding']
-        if self.para['dilation'] is not None:
-            dilation_h, dilation_w = self.para['dilation']
-        else:
-            dilation_h, dilation_w = 1, 1
+        dilation_h, dilation_w = 1, 1
         stride_h, stride_w = self.para['stride']
         h_out = (h_in + 2 * padding_h - dilation_h * (kernel_h - 1) - 1) // stride_h + 1
         w_out = (h_in + 2 * padding_w - dilation_w * (kernel_w - 1) - 1) // stride_w + 1
-        c_out = self.para['outchannels']
+        c_out = c_in
         self.para['in_size'] = (c_in, h_in, w_in)
         self.para['out_size'] = (c_out, h_out, w_out)
         output = np.array(self.para['out_size'])
@@ -117,7 +114,7 @@ class LinearNode(Node):
         for i in range(dataIn.shape[0]):
             size_in = size_in * dataIn[i]
         size_out = self.para['out_features']
-        self.para['in_size'] = size_in
+        self.para['in_size'] = int(size_in)
         self.para['out_size'] = size_out
         output = np.array(size_out)
         self.child = QTreeWidgetItem()
@@ -150,11 +147,12 @@ class ConcatNode(Node):
     def process(self, **kargs):
         c, max_h, max_w = 0, 0, 0
         for k, v in kargs.items():
-            c += v[0]
-            if max_h < v[1]:
-                max_h = v[1]
-            if max_w < v[2]:
-                max_w = v[2]
+            vv = v.tolist()
+            c += vv[0]
+            if max_h < vv[1]:
+                max_h = vv[1]
+            if max_w < vv[2]:
+                max_w = vv[2]
         self.para['out_size'] = (c, max_h, max_w)
         output = np.array(self.para['out_size'])
         self.child = QTreeWidgetItem()
@@ -187,7 +185,7 @@ class Concat1dNode(Node):
     def process(self, **kargs):
         size = 0
         for k, v in kargs.items():
-            size += v
+            size += v.tolist()
         self.para['out_size'] = size
         output = np.array(size)
         self.child = QTreeWidgetItem()
@@ -218,7 +216,7 @@ class SoftmaxNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        size_in = dataIn
+        size_in = dataIn.tolist()
         self.para['in_size'] = size_in
         self.para['out_size'] = size_in
         output = np.array(size_in)
@@ -250,7 +248,7 @@ class LogSoftmaxNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        size_in = dataIn
+        size_in = dataIn.tolist()
         self.para['in_size'] = size_in
         self.para['out_size'] = size_in
         output = np.array(size_in)
@@ -282,10 +280,10 @@ class BachNorm1dNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        size_in = dataIn
+        size_in = dataIn.tolist()
         self.para['in_size'] = size_in
         self.para['out_size'] = size_in
-        output = np.array(size_in)
+        output = dataIn
         self.child = QTreeWidgetItem()
         self.child.setText(0, self.thisname)
         self.view.addChild(self.child)
@@ -314,10 +312,10 @@ class BachNorm2dNode(Node):
         self.para = para
 
     def process(self, dataIn):
-        size_in = dataIn
-        self.para['in_size'] = size_in
-        self.para['out_size'] = size_in
-        output = size_in
+        c, h, w = dataIn.tolist()
+        self.para['in_size'] = (c, h, w)
+        self.para['out_size'] = (c, h, w)
+        output = dataIn
         self.child = QTreeWidgetItem()
         self.child.setText(0, self.thisname)
         self.view.addChild(self.child)
@@ -347,7 +345,7 @@ class AddNode(Node):
 
     def process(self, **kargs):
         c, h, w = kargs.popitem()[1]
-        self.para['out_size'] = (c, h, w)
+        self.para['out_size'] = (int(c), int(h), int(w))
         output = np.array(self.para['out_size'])
         self.child = QTreeWidgetItem()
         self.child.setText(0, self.thisname)

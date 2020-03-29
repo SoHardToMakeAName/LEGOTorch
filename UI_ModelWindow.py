@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'UI_ModelWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_ModelWindow(object):
     def setupUi(self, ModelWindow):
@@ -44,10 +42,13 @@ class Ui_ModelWindow(object):
         self.AddModel.setObjectName("AddModel")
         self.action = QtWidgets.QAction(ModelWindow)
         self.action.setObjectName("action")
+        self.ExportWithoutCheck = QtWidgets.QAction(ModelWindow)
+        self.ExportWithoutCheck.setObjectName("ExportWithoutCheck")
         self.Function.addAction(self.ToDataset)
         self.Function.addAction(self.ToTrain)
         self.FileSet.addAction(self.InportFile)
         self.FileSet.addAction(self.ExportFile)
+        self.FileSet.addAction(self.ExportWithoutCheck)
         self.Add.addAction(self.AddLayer)
         self.Add.addAction(self.AddModel)
         self.Add.addAction(self.action)
@@ -73,3 +74,5 @@ class Ui_ModelWindow(object):
         self.AddLayer.setText(_translate("ModelWindow", "新建"))
         self.AddModel.setText(_translate("ModelWindow", "更改"))
         self.action.setText(_translate("ModelWindow", "删除"))
+        self.ExportWithoutCheck.setText(_translate("ModelWindow", "导出但不检查"))
+

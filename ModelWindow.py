@@ -112,7 +112,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.nodes[data['name']] = data
         if data['type'] == 1:
             self.fc.addInput(data['name'])
-            self.fc_inputs[data['name']] = data['para']['size']
+            self.fc_inputs[data['name']] = data['para']['out_size']
             self.fc.setInput(**self.fc_inputs)
         elif data['type'] in [9, 10, 11]:
             node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
@@ -123,7 +123,10 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 in_name = self.id_name[i]
                 in_size = self.nodes[in_name]['para']['out_size']
                 node.addInput(in_name)
-                self.fc.connectTerminals(self.fc.nodes()[in_name]['dataOut'], node[in_name])
+                if self.nodes[in_name]['type'] == 1:
+                    self.fc.connectTerminals(self.fc[in_name], node[in_name])
+                else:
+                    self.fc.connectTerminals(self.fc.nodes()[in_name]['dataOut'], node[in_name])
             if data['isoutput']:
                 self.fc.addOutput(data['name'])
                 self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
@@ -152,7 +155,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         content = list()
         for id in sort:
             content.append(self.nodes[self.id_name[id]])
-        with open(filedir+filename_text+".json", 'w') as f1:
+        with open(filedir+'/'+filename_text+".json", 'w') as f1:
             json.dump(content, f1)
         with open(filename, 'w') as f:
             f.write('import torch\nimport torch.nn as nn\nimport torch.nn.Functional as F\n')
@@ -386,7 +389,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
         data['para'] = dict()
         if self.layertype.currentIndex() == 1:
             try:
-                data['para']['size'] = (int(self.sizec.text()), int(self.sizeh.text()), int(self.sizew.text()))
+                data['para']['out_size'] = (int(self.sizec.text()), int(self.sizeh.text()), int(self.sizew.text()))
             except:
                 QMessageBox.warning(self, "警告", "不合法输入：输入维度均应为正整数")
                 send_data = False
