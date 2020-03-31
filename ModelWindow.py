@@ -151,14 +151,74 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         filename_text = filename_text.split(".")[0]
         sort = self.check()
         if sort is None:
-            print("Invalid Network!")
+            return 0
         content = list()
         for id in sort:
             content.append(self.nodes[self.id_name[id]])
         with open(filedir+'/'+filename_text+".json", 'w') as f1:
             json.dump(content, f1)
         with open(filename, 'w') as f:
+            space = "    "
             f.write('import torch\nimport torch.nn as nn\nimport torch.nn.Functional as F\n')
+            f.write("class Net(nn.Module):\n")
+            f.write(space+"def __init__(self):\n")
+            f.write(space*2+"super(Net, self).__init__()\n")
+            for id in sort:
+                name = self.id_name[id]
+                layer = self.nodes[name]
+                if layer['type'] == 2:
+                    f.write(space*2+"self."+layer['name']+" = nn.Cov2d(")
+                    f.write(str(layer['para']['in_size'][0])+","+str(layer['para']['outchannels'])+","\
+                            +str(layer['para']['kernel']))
+                    for k, v in layer['para'].items():
+                        if k in ['stride', 'padding', 'dilation', 'bias', 'padding_mode'] and v is not None:
+                            f.write(","+k+"="+str(v))
+                    f.write(")\n")
+                elif layer['type'] == 3:
+                    if layer['para']['type'] == "max":
+                        f.write(space*2+"self."+layer['name']+" = nn.MaxPool2d(")
+                        f.write(str(layer['para']['kernel']))
+                        for k,v in layer['para'].items():
+                            if k in ['stride', 'padding'] and v is not None:
+                                f.write(","+k+"="+str(v))
+                    elif layer['para']['type'] == "average":
+                        f.write(space*2+"self."+layer['name']+" = nn.AvgPool2d(")
+                        f.write(str(layer['para']['kernel']))
+                        for k, v in layer['para'].items():
+                            if k in ['stride', 'padding'] and v is not None:
+                                f.write("," + k + "=" + str(v))
+                    else:
+                        f.write(space*2+"self."+layer['name']+" = nn.LPPool2d(")
+                        f.write(str(layer['para']['power'])+",")
+                        f.write(str(layer['para']['kernel']))
+                        for k, v in layer['para'].items():
+                            if k in ['stride', 'padding'] and v is not None:
+                                f.write("," + k + "=" + str(v))
+                    f.write(")\n")
+                elif layer['type'] == 4:
+                    f.write(space*2+"self."+layer['name']+" = nn.Linear(")
+                    f.write(str(layer['para']['in_size'])+",")
+                    f.write(str(layer['para']['out_features'])+",")
+                    f.write("bias="+str(layer['para']['bias']))
+                    f.write(")\n")
+                elif layer['type'] == 7:
+                    f.write(space * 2 + "self." + layer['name'] + " = nn.BatchNorm2d(")
+                    f.write(str(layer['para']['in_size'])+",")
+                    f.write("eps="+str(layer['para']['eps'])+",")
+                    f.write("momentum=" + str(layer['para']['momentum']) + ",")
+                    f.write("affine=" + str(layer['para']['affine']) + ",")
+                    f.write("track_running_stats=" + str(layer['para']['track_running_stats']) + ")\n")
+                elif layer['type'] == 8:
+                    f.write(space * 2 + "self." + layer['name'] + " = nn.BatchNorm1d(")
+                    f.write(str(layer['para']['in_size'][0]) + ",")
+                    f.write("eps=" + str(layer['para']['eps']) + ",")
+                    f.write("momentum=" + str(layer['para']['momentum']) + ",")
+                    f.write("affine=" + str(layer['para']['affine']) + ",")
+                    f.write("track_running_stats=" + str(layer['para']['track_running_stats']) + ")\n")
+            #以下为forward函数
+            f.write(space+"def forward(self, ")
+            for
+
 
     def check(self):
         if len(self.outputs) == 0:
@@ -274,6 +334,9 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             reg = QRegExp('[0-9]+$')
             pValidator = QRegExpValidator(self)
             pValidator.setRegExp(reg)
+            reg2 = QRegExp('[0-9.]+$')
+            pValidator2 = QRegExpValidator(self)
+            pValidator2.setRegExp(reg2)
             label_poolingtype = QLabel("池化类型：")
             self.poolingtype = QComboBox()
             self.poolingtype.addItem("average")
@@ -310,7 +373,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.content.addWidget(self.padding_2, 3, 3)
             label_power = QLabel("power\n(仅适用于LP Pooling)")
             self.power = QLineEdit()
-            self.power.setValidator(pValidator)
+            self.power.setValidator(pValidator2)
             self.content.addWidget(label_power, 4, 0)
             self.content.addWidget(self.power, 4, 1)
         elif self.layertype.currentIndex() == 4:
