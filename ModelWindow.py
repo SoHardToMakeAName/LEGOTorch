@@ -159,7 +159,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             json.dump(content, f1)
         with open(filename, 'w') as f:
             space = "    "
-            f.write('import torch\nimport torch.nn as nn\nimport torch.nn.Functional as F\n')
+            f.write('import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n')
             f.write("class Net(nn.Module):\n")
             f.write(space+"def __init__(self):\n")
             f.write(space*2+"super(Net, self).__init__()\n")
@@ -167,7 +167,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 name = self.id_name[id]
                 layer = self.nodes[name]
                 if layer['type'] == 2:
-                    f.write(space*2+"self."+layer['name']+" = nn.Cov2d(")
+                    f.write(space*2+"self."+layer['name']+" = nn.Conv2d(")
                     f.write(str(layer['para']['in_size'][0])+","+str(layer['para']['outchannels'])+","\
                             +str(layer['para']['kernel']))
                     for k, v in layer['para'].items():
@@ -216,8 +216,31 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     f.write("affine=" + str(layer['para']['affine']) + ",")
                     f.write("track_running_stats=" + str(layer['para']['track_running_stats']) + ")\n")
             #以下为forward函数
-            f.write(space+"def forward(self, ")
-            for
+            f.write(space+"def forward(self")
+            for input in self.fc_inputs.keys():
+                f.write(","+input)
+            f.write("):\n")
+            for layer_id in sort:
+                layer = self.nodes[self.id_name[layer_id]]
+                if layer['type'] == 2 or layer['type'] == 4:
+                    f.write(space*2+layer['name']+" = ")
+                    inner_str = "self."+ layer['name'] + "(" + self.id_name[layer['input'][0]] + ")"
+                    if layer['para']['activate'] != "None":
+                        tmp = "F."+layer['para']['activate'] + "({})".format(inner_str)
+                        inner_str = tmp
+                    if layer['para']['dropout']:
+                        tmp = "F.dropout({}, p=".format(inner_str)+str(layer['para']['dropout_radio'])+")"
+                        inner_str = tmp
+                    f.write(inner_str)
+                    f.write("\n")
+                elif layer['type'] == 3:
+                    f.write(space*2+layer['name']+" = self.{}({})\n".format(layer['name'],
+                                                                            self.id_name[layer['input'][0]]))
+                elif layer['type'] == 5:
+                    f.write(space*2+layer['name']+" = F.softmax({})\n".format(self.id_name[layer['input'][0]]))
+                elif layer['type'] == 6:
+                    f.write(space*2+layer['name']+" = F.log_softmax({})\n".format(self.id_name[layer['input'][0]]))
+
 
 
     def check(self):
@@ -300,7 +323,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.activate.addItem("relu")
             self.activate.addItem("gelu")
             self.activate.addItem("sigmoid")
-            self.activate.addItem("log_sigmoid")
+            self.activate.addItem("logsigmoid")
             self.activate.addItem("tanh")
             self.use_dropout = QCheckBox("Dropout")
             self.dropout_radio = QLineEdit()
@@ -390,7 +413,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.activate.addItem("relu")
             self.activate.addItem("gelu")
             self.activate.addItem("sigmoid")
-            self.activate.addItem("log_sigmoid")
+            self.activate.addItem("logsigmoid")
             self.activate.addItem("tanh")
             self.use_dropout = QCheckBox("Dropout")
             self.dropout_radio = QLineEdit()
@@ -530,6 +553,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
                 QMessageBox.warning(self, "警告", "不合法输入：输出宽度应为正整数")
                 send_data = False
             data['para']['bias'] = self.bias.isChecked()
+            data['para']['activate'] = self.activate.currentText()
             data['para']['dropout'] = self.use_dropout.isChecked()
             if data['para']['dropout']:
                 try:
