@@ -111,8 +111,8 @@ class LinearNode(Node):
 
     def process(self, dataIn):
         size_in = 1
-        for i in range(dataIn.shape[0]):
-            size_in = size_in * dataIn[i]
+        for i in dataIn:
+            size_in = size_in * i
         size_out = self.para['out_features']
         self.para['in_size'] = int(size_in)
         self.para['out_size'] = size_out

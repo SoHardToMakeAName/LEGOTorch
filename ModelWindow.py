@@ -149,9 +149,9 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         filename, _ = QFileDialog.getSaveFileName(self, '导出模型', 'C:\\', 'Python Files (*.py)')
         filedir, filename_text = os.path.split(filename)
         filename_text = filename_text.split(".")[0]
-        sort = self.check()
-        if sort is None:
+        if self.check() == 0:
             return 0
+        sort = list(nx.topological_sort(self.net))
         content = list()
         for id in sort:
             content.append(self.nodes[self.id_name[id]])
@@ -233,20 +233,59 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                         inner_str = tmp
                     f.write(inner_str)
                     f.write("\n")
-                elif layer['type'] == 3:
+                elif layer['type'] in [3, 7, 8]:
                     f.write(space*2+layer['name']+" = self.{}({})\n".format(layer['name'],
                                                                             self.id_name[layer['input'][0]]))
                 elif layer['type'] == 5:
                     f.write(space*2+layer['name']+" = F.softmax({})\n".format(self.id_name[layer['input'][0]]))
                 elif layer['type'] == 6:
                     f.write(space*2+layer['name']+" = F.log_softmax({})\n".format(self.id_name[layer['input'][0]]))
-
-
+                elif layer['type'] == 9:
+                    f.write(space*2+layer['name']+ " = ")
+                    for i in range(len(layer['input'])-1):
+                        f.write(self.id_name[layer['input'][i]]+"+")
+                    f.write(self.id_name[layer['input'][len(layer['input'])-1]]+"\n")
+                elif layer['type'] == 10:
+                    layers_to_cat = list()
+                    for input_id in layer['input']:
+                        input_name = self.id_name[input_id]
+                        input_layer = self.nodes[input_name]
+                        layers_to_cat.append(input_name)
+                        pad_up, pad_down, pad_left, pad_right = 0, 0, 0, 0
+                        if input_layer['para']['out_size'][1] != layer['para']['out_size'][1]:
+                            rest = (layer['para']['out_size'][1] - input_layer['para']['out_size'][1])/2
+                            if rest != int(rest):
+                                pad_up, pad_down = int(rest), int(rest)+1
+                            else:
+                                pad_up, pad_down = int(rest), int(rest)
+                        if input_layer['para']['out_size'][2] != layer['para']['out_size'][2]:
+                            rest = (layer['para']['out_size'][2] - input_layer['para']['out_size'][2])/2
+                            if rest != int(rest):
+                                pad_left, pad_right = int(rest), int(rest)+1
+                            else:
+                                pad_left, pad_right = int(rest), int(rest)
+                            pad = (pad_left, pad_right, pad_up, pad_down)
+                        f.write(space*2+input_name+" = F.pad({}, ({}, {}, {}, {}))\n".format(input_name,\
+                                                        pad_left, pad_right, pad_up, pad_down))
+                    f.write(space*2+layer['name']+" = torch.cat({}, 1)\n".format(str(layers_to_cat)))
+                elif layer['type'] == 11:
+                    layers_to_cat = list()
+                    for input_id in layer['input']:
+                        input_name = self.id_name[input_id]
+                        layers_to_cat.append(input_name)
+                    f.write(space * 2 + layer['name'] + " = torch.cat({}, 1)\n".format(layers_to_cat))
 
     def check(self):
         if len(self.outputs) == 0:
-            return None
-        return list(nx.topological_sort(self.net))
+            return 0
+        for item in self.nodes.values():
+            if type(item['para']['out_size']) is int:
+                if item['para']['out_size'] <= 0:
+                    return 0
+            else:
+                for size in item['para']['out_size']:
+                    if size <= 0:
+                        return 0
 
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
