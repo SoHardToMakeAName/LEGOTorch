@@ -192,7 +192,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                         f.write(str(layer['para']['power'])+",")
                         f.write(str(layer['para']['kernel']))
                         for k, v in layer['para'].items():
-                            if k in ['stride', 'padding'] and v is not None:
+                            if k == 'stride' and v is not None:
                                 f.write("," + k + "=" + str(v))
                     f.write(")\n")
                 elif layer['type'] == 4:
@@ -202,14 +202,14 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     f.write("bias="+str(layer['para']['bias']))
                     f.write(")\n")
                 elif layer['type'] == 7:
-                    f.write(space * 2 + "self." + layer['name'] + " = nn.BatchNorm2d(")
+                    f.write(space * 2 + "self." + layer['name'] + " = nn.BatchNorm1d(")
                     f.write(str(layer['para']['in_size'])+",")
                     f.write("eps="+str(layer['para']['eps'])+",")
                     f.write("momentum=" + str(layer['para']['momentum']) + ",")
                     f.write("affine=" + str(layer['para']['affine']) + ",")
                     f.write("track_running_stats=" + str(layer['para']['track_running_stats']) + ")\n")
                 elif layer['type'] == 8:
-                    f.write(space * 2 + "self." + layer['name'] + " = nn.BatchNorm1d(")
+                    f.write(space * 2 + "self." + layer['name'] + " = nn.BatchNorm2d(")
                     f.write(str(layer['para']['in_size'][0]) + ",")
                     f.write("eps=" + str(layer['para']['eps']) + ",")
                     f.write("momentum=" + str(layer['para']['momentum']) + ",")
@@ -220,13 +220,21 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             for input in self.fc_inputs.keys():
                 f.write(","+input)
             f.write("):\n")
+            return_layers = list()
             for layer_id in sort:
                 layer = self.nodes[self.id_name[layer_id]]
                 if layer['type'] == 2 or layer['type'] == 4:
                     f.write(space*2+layer['name']+" = ")
-                    inner_str = "self."+ layer['name'] + "(" + self.id_name[layer['input'][0]] + ")"
+                    if layer['type'] == 4:
+                        input_name = self.id_name[layer['input'][0]]
+                        inner_str = "self.{0}({1}.view({1}.size()[0], -1))".format(layer['name'], input_name)
+                    else:
+                        inner_str = "self."+ layer['name'] + "(" + self.id_name[layer['input'][0]] + ")"
                     if layer['para']['activate'] != "None":
-                        tmp = "F."+layer['para']['activate'] + "({})".format(inner_str)
+                        if layer['para']['activate'] in ['tanh', 'sigmoid']:
+                            tmp = "torch." + layer['para']['activate'] + "({})".format(inner_str)
+                        else:
+                            tmp = "F."+layer['para']['activate'] + "({})".format(inner_str)
                         inner_str = tmp
                     if layer['para']['dropout']:
                         tmp = "F.dropout({}, p=".format(inner_str)+str(layer['para']['dropout_radio'])+")"
@@ -267,13 +275,16 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                             pad = (pad_left, pad_right, pad_up, pad_down)
                         f.write(space*2+input_name+" = F.pad({}, ({}, {}, {}, {}))\n".format(input_name,\
                                                         pad_left, pad_right, pad_up, pad_down))
-                    f.write(space*2+layer['name']+" = torch.cat({}, 1)\n".format(str(layers_to_cat)))
+                    f.write(space*2+layer['name']+" = torch.cat([{}], 1)\n".format(",".join(layers_to_cat)))
                 elif layer['type'] == 11:
                     layers_to_cat = list()
                     for input_id in layer['input']:
                         input_name = self.id_name[input_id]
                         layers_to_cat.append(input_name)
-                    f.write(space * 2 + layer['name'] + " = torch.cat({}, 1)\n".format(layers_to_cat))
+                    f.write(space * 2 + layer['name'] + " = torch.cat([{}], 1)\n".format(",".join(layers_to_cat)))
+                if layer['isoutput']:
+                    return_layers.append(layer['name'])
+            f.write(space*2+"return {}\n".format(",".join(return_layers)))
 
     def check(self):
         if len(self.outputs) == 0:
@@ -360,7 +371,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.activate = QComboBox()
             self.activate.addItem("None")
             self.activate.addItem("relu")
-            self.activate.addItem("gelu")
+            self.activate.addItem("leaky_relu")
             self.activate.addItem("sigmoid")
             self.activate.addItem("logsigmoid")
             self.activate.addItem("tanh")
@@ -450,7 +461,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.activate = QComboBox()
             self.activate.addItem("None")
             self.activate.addItem("relu")
-            self.activate.addItem("gelu")
+            self.activate.addItem("leaky_relu")
             self.activate.addItem("sigmoid")
             self.activate.addItem("logsigmoid")
             self.activate.addItem("tanh")
