@@ -147,6 +147,8 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
 
     def export_file(self):
         filename, _ = QFileDialog.getSaveFileName(self, '导出模型', 'C:\\', 'Python Files (*.py)')
+        if filename is None or filename == "":
+            return 0
         filedir, filename_text = os.path.split(filename)
         filename_text = filename_text.split(".")[0]
         if self.check() == 0:
@@ -245,9 +247,9 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     f.write(space*2+layer['name']+" = self.{}({})\n".format(layer['name'],
                                                                             self.id_name[layer['input'][0]]))
                 elif layer['type'] == 5:
-                    f.write(space*2+layer['name']+" = F.softmax({})\n".format(self.id_name[layer['input'][0]]))
+                    f.write(space*2+layer['name']+" = F.softmax({}, dim=1)\n".format(self.id_name[layer['input'][0]]))
                 elif layer['type'] == 6:
-                    f.write(space*2+layer['name']+" = F.log_softmax({})\n".format(self.id_name[layer['input'][0]]))
+                    f.write(space*2+layer['name']+" = F.log_softmax({}, dim=1)\n".format(self.id_name[layer['input'][0]]))
                 elif layer['type'] == 9:
                     f.write(space*2+layer['name']+ " = ")
                     for i in range(len(layer['input'])-1):
@@ -297,6 +299,69 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 for size in item['para']['out_size']:
                     if size <= 0:
                         return 0
+
+    def import_file(self):
+        filename, _ = QFileDialog.getOpenFileName(self, '导入模型', 'C:\\', 'JSON Files (*.json)')
+        if filename is None or filename == "":
+            return 0
+        d_json = json.load(open(filename, 'r'))
+        self.id_name = dict()
+        self.name_id = dict()
+        self.nodes = dict()
+        self.net = nx.DiGraph()
+        self.fc.clear()
+        self.fc_inputs = dict()
+        self.global_id = 0
+        self.outputs = list()
+        self.detail.clear()
+        self.detail.setColumnCount(2)
+        self.detail.setHeaderLabels(["属性", "值"])
+        self.root = QTreeWidgetItem(self.detail)
+        self.root.setText(0, "所有属性")
+        for data in d_json:
+            self.id_name[data['ID']] = data['name']
+            self.name_id[data['ID']] = data['ID']
+            self.nodes[data['name']] = data
+            self.net.add_node(data['ID'])
+            for i in data['input']:
+                self.net.add_edge(i, data['ID'])
+            if data['type'] == 1:
+                if not data['name'] in self.fc.inputs().keys():
+                    self.fc.addInput(data['name'])
+                self.fc_inputs[data['name']] = data['para']['out_size']
+                self.fc.setInput(**self.fc_inputs)
+            elif data['type'] in [9, 10, 11]:
+                node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
+                                          pos=(data['input'][0] * 120, (data['ID'] - data['input'][0]) * 150 - 500))
+                node.setPara(data['para'])
+                node.setView(self.root)
+                for i in data['input']:
+                    in_name = self.id_name[i]
+                    in_size = self.nodes[in_name]['para']['out_size']
+                    node.addInput(in_name)
+                    if self.nodes[in_name]['type'] == 1:
+                        self.fc.connectTerminals(self.fc[in_name], node[in_name])
+                    else:
+                        self.fc.connectTerminals(self.fc.nodes()[in_name]['dataOut'], node[in_name])
+                if data['isoutput']:
+                    if not data['name'] in self.fc.outputs().keys():
+                        self.fc.addOutput(data['name'])
+                    self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
+            else:
+                node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
+                                          pos=(data['input'][0] * 120, (data['ID'] - data['input'][0]) * 150 - 500))
+                node.setPara(data['para'])
+                node.setView(self.root)
+                if self.nodes[self.id_name[data['input'][0]]]['type'] == 1:
+                    self.fc.connectTerminals(self.fc[self.id_name[data['input'][0]]], node['dataIn'])
+                else:
+                    self.fc.connectTerminals(self.fc.nodes()[self.id_name[data['input'][0]]]['dataOut'], node['dataIn'])
+                if data['isoutput']:
+                    if not data['name'] in self.fc.outputs().keys():
+                        self.fc.addOutput(data['name'])
+                    self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
+            if data['isoutput']:
+                self.outputs.append(data['ID'])
 
 
 class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
