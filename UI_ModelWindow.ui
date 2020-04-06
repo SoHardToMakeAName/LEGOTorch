@@ -36,7 +36,6 @@
     </property>
     <addaction name="InportFile"/>
     <addaction name="ExportFile"/>
-    <addaction name="ExportWithoutCheck"/>
    </widget>
    <widget class="QMenu" name="Add">
     <property name="title">

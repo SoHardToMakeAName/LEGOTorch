@@ -48,7 +48,6 @@ class Ui_ModelWindow(object):
         self.Function.addAction(self.ToTrain)
         self.FileSet.addAction(self.InportFile)
         self.FileSet.addAction(self.ExportFile)
-        self.FileSet.addAction(self.ExportWithoutCheck)
         self.Add.addAction(self.AddLayer)
         self.Add.addAction(self.AddModel)
         self.Add.addAction(self.action)

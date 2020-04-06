@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>UI_TrainWindow</class>
+ <widget class="QWidget" name="UI_TrainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>667</width>
+    <height>447</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="1">
+    <widget class="QTextBrowser" name="log"/>
+   </item>
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0" colspan="2">
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="3" column="0" colspan="2">
+        <widget class="QWidget" name="loss_detail" native="true"/>
+       </item>
+       <item row="4" column="1">
+        <widget class="QComboBox" name="comboBox">
+         <item>
+          <property name="text">
+           <string>&lt;None&gt;</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>SGD</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Adam</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Adadelta</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>RMSprop</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="dataset_to_load">
+         <item>
+          <property name="text">
+           <string>&lt;None&gt;</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>自定义</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>MNIST</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>COCO_Caption</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>COCO_Detection</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>ImageNet</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>CIFAR</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>请选择损失函数：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>请选择要加载的模型：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>请选择要加载的数据集：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="model_to_load">
+         <item>
+          <property name="text">
+           <string>&lt;None&gt;</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>自定义</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>resnet18</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>resnet50_32x4d</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>wide_resnet50_2</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>alexnet</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>vgg16</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>squeezenet1_0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>densenet161</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>inception_v3</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>goglenet</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>mobilenet_v2</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="loss_to_load">
+         <item>
+          <property name="text">
+           <string>&lt;None&gt;</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>自定义</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>L1Loss</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>MSELoss</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>CrossEntropyLoss</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>SoftMarginLoss</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>TripletLoss</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>请选择优化器：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QWidget" name="widget" native="true"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
