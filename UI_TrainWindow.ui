@@ -18,10 +18,7 @@
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0" colspan="2">
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="3" column="0" colspan="2">
-        <widget class="QWidget" name="loss_detail" native="true"/>
-       </item>
-       <item row="4" column="1">
+       <item row="6" column="1">
         <widget class="QComboBox" name="optim_to_load">
          <item>
           <property name="text">
@@ -50,7 +47,7 @@
          </item>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QComboBox" name="dataset_to_load">
          <item>
           <property name="text">
@@ -89,26 +86,14 @@
          </item>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>请选择损失函数：</string>
-         </property>
-        </widget>
+       <item row="1" column="0" colspan="2">
+        <layout class="QVBoxLayout" name="pretrained_layout"/>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>请选择要加载的模型：</string>
-         </property>
-        </widget>
+       <item row="3" column="0" colspan="2">
+        <layout class="QGridLayout" name="dataset_layout"/>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>请选择要加载的数据集：</string>
-         </property>
-        </widget>
+       <item row="5" column="0" colspan="2">
+        <layout class="QGridLayout" name="loss_layout"/>
        </item>
        <item row="0" column="1">
         <widget class="QComboBox" name="model_to_load">
@@ -174,7 +159,21 @@
          </item>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>请选择优化器：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>请选择要加载的数据集：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
         <widget class="QComboBox" name="loss_to_load">
          <item>
           <property name="text">
@@ -214,14 +213,21 @@
         </widget>
        </item>
        <item row="4" column="0">
-        <widget class="QLabel" name="label_4">
+        <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>请选择优化器：</string>
+          <string>请选择损失函数：</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="QWidget" name="widget" native="true"/>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>请选择要加载的模型：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0" colspan="2">
+        <layout class="QGridLayout" name="optim_layout"/>
        </item>
       </layout>
      </item>
@@ -300,9 +306,59 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>dataset_to_load</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>load_dataset()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>310</x>
+     <y>51</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>348</x>
+     <y>103</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>loss_to_load</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>load_loss_function()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>77</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>346</x>
+     <y>173</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>optim_to_load</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>load_optim()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>297</x>
+     <y>356</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>346</x>
+     <y>366</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>load_dataset()</slot>
   <slot>load_model()</slot>
+  <slot>load_loss_function()</slot>
+  <slot>load_optim()</slot>
  </slots>
 </ui>
