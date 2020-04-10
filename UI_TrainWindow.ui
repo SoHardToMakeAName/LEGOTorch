@@ -18,82 +18,32 @@
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0" colspan="2">
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="6" column="1">
-        <widget class="QComboBox" name="optim_to_load">
-         <item>
-          <property name="text">
-           <string>&lt;None&gt;</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>SGD</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Adam</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Adadelta</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>RMSprop</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QComboBox" name="dataset_to_load">
-         <item>
-          <property name="text">
-           <string>&lt;None&gt;</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>自定义</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>MNIST</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>COCO_Caption</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>COCO_Detection</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>ImageNet</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>CIFAR</string>
-          </property>
-         </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QWidget" name="widget_3" native="true">
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="loss_layout"/>
+          </item>
+         </layout>
         </widget>
        </item>
        <item row="1" column="0" colspan="2">
-        <layout class="QVBoxLayout" name="pretrained_layout"/>
+        <widget class="QWidget" name="widget" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <layout class="QVBoxLayout" name="pretrained_layout_2"/>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item row="3" column="0" colspan="2">
-        <layout class="QGridLayout" name="dataset_layout"/>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <layout class="QGridLayout" name="loss_layout"/>
+        <widget class="QWidget" name="widget_2" native="true">
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="dataset_layout"/>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item row="0" column="1">
         <widget class="QComboBox" name="model_to_load">
@@ -104,7 +54,7 @@
          </item>
          <item>
           <property name="text">
-           <string>自定义</string>
+           <string>从文件中加载</string>
           </property>
          </item>
          <item>
@@ -166,10 +116,10 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_2">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
          <property name="text">
-          <string>请选择要加载的数据集：</string>
+          <string>请选择要加载的模型：</string>
          </property>
         </widget>
        </item>
@@ -178,6 +128,11 @@
          <item>
           <property name="text">
            <string>&lt;None&gt;</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>从文件中加载</string>
           </property>
          </item>
          <item>
@@ -219,15 +174,94 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
+       <item row="6" column="1">
+        <widget class="QComboBox" name="optim_to_load">
+         <item>
+          <property name="text">
+           <string>&lt;None&gt;</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>SGD</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Adam</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Adadelta</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>RMSprop</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>请选择要加载的模型：</string>
+          <string>请选择要加载的数据集：</string>
          </property>
         </widget>
        </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="dataset_to_load">
+         <item>
+          <property name="text">
+           <string>&lt;None&gt;</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>从文件中加载</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>自定义</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>MNIST</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>COCO_Caption</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>COCO_Detection</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>ImageNet</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>CIFAR</string>
+          </property>
+         </item>
+        </widget>
+       </item>
        <item row="7" column="0" colspan="2">
-        <layout class="QGridLayout" name="optim_layout"/>
+        <widget class="QWidget" name="widget_4" native="true">
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="optim_layout"/>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </item>
