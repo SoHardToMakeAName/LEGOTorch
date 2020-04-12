@@ -31,7 +31,7 @@
         <widget class="QWidget" name="widget" native="true">
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <layout class="QVBoxLayout" name="pretrained_layout_2"/>
+           <layout class="QVBoxLayout" name="pretrained_layout"/>
           </item>
          </layout>
         </widget>
