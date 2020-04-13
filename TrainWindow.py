@@ -33,7 +33,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         else:
             self.is_pretrained = QCheckBox("使用预训练模型")
             self.pretrained_layout.addWidget(self.is_pretrained)
-            self.model['type'] = 2
+            self.model['type'] = self.model_to_load.currentIndex()
             self.model['name'] = self.model_to_load.currentText()
             self.log.append("加载模型:{}\n".format(self.model['name']))
 
@@ -53,7 +53,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.new_dataset = NewDatasetWindow()
             self.new_dataset.show()
         else:
-            self.dataset['type'] = 2
+            self.dataset['type'] = self.dataset_to_load.currentIndex()
             self.dataset['name'] = self.dataset_to_load.currentText()
             filename = QFileDialog.getExistingDirectory(self, caption="下载数据集", directory="/")
             self.log.append("加载数据集:{}, 路径为:{}".format(self.dataset['name'], filename))
@@ -109,7 +109,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.new_loss = NewLossWindow()
             self.new_loss.show()
         else:
-            self.loss['type'] = 2
+            self.loss['type'] = self.loss_to_load.currentIndex()
             self.loss['name'] = self.loss_to_load.currentText()
             self.log.append("选定损失函数为:{}\n".format(self.loss['name']))
             if self.loss_to_load.currentIndex() in [3, 4, 5, 6]:
@@ -155,7 +155,11 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         reg2 = QRegExp('^[0-9]+(([.]?[0-9]*)|([eE]?[-]?[0-9]*))$')
         pValidator2 = QRegExpValidator(self)
         pValidator2.setRegExp(reg2)
+        self.log.append("选定优化器:{}".format(self.optim_to_load.currentText()))
+        self.optim['type'] = self.optim_to_load.currentIndex()
+        self.optim['name'] = self.optim_to_load.currentText()
         if self.optim_to_load.currentIndex() == 1:
+            self.optim['type'] = 1
             label_lr = QLabel("learning rate:")
             self.lr = QLineEdit()
             self.lr.setValidator(pValidator2)
@@ -273,6 +277,55 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.optim_layout.addWidget(self.weight_decay, 2, 1)
             self.optim_layout.addWidget(self.centered, 2, 2)
 
+    def start(self):
+        if self.model_to_load.currentIndex() == 1:
+            QMessageBox.warning(self, "警告", "未加载模型")
+            return 0
+        if self.dataset_to_load.currentIndex() == 1:
+            QMessageBox.warning(self, "警告", "未加载数据集")
+            return 0
+        if self.loss_to_load.currentIndex() == 1:
+            QMessageBox.warning(self, "警告", "未选择损失函数")
+            return 0
+        if self.optim_to_load.currentIndex() == 1:
+            QMessageBox.warning(self, "警告", "未选择优化器")
+            return 0
+        with open("tmp.py", 'w') as f:
+            space = "    "
+            f.write("import torch\nimport sys\nimport torchvision\nimport torchvision.transforms as transforms\n"
+                    "import torch.optim as optim\nimport torch.nn as nn\n")
+            if self.model['type'] == 1:
+                f.write("sys.path.append(r\'{}\')\n".format(self.model['dir']))
+                f.write("from {} import Net\n".format(self.model['module']))
+                f.write("net = Net()\n")
+            else:
+                f.write("import torchvision.models as models\n")
+                if self.is_pretrained:
+                    f.write("net = models.{}(pretrained=True)\n".format(self.model['name']))
+                else:
+                    f.write("net = models.{}(pretrained=False)\n".format(self.model['name']))
+            if self.resize_w.text() == "" or self.resize_h.text() == "":
+                f.write("transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize"
+                        "(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])\n")
+            else:
+                f.write("transform = transforms.Compose([transforms.Resize(size=({},{}),transfroms.ToTensor(), "
+                        "transforms.Normalize(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])\n".format(
+                    self.resize_h.text(), self.resize_w.text()
+                ))
+            if self.dataset['type'] == 1:
+                f.write("sys.path.append(r\'{}\')\n".format(self.dataset['dir']))
+                f.write("from {} import MyDataset\n".format(self.dataset['module']))
+                f.write("trainset = MyDataset()\n")
+            elif self.dataset['type'] in [3, 7]:
+                f.write("trainset = torchvisions.datasets.{}(root={}, train=True, transform=transform, download="
+                        "True)\n".format(self.dataset['name'], self.dataset['para']['root']))
+            elif self.dataset['type'] in [4, 5]:
+                f.write("trainset = torchvisions.datasets.{0}(root={1}, annFile={1}, transform=transform)\n".format(
+                    self.dataset['name'], self.dataset['para']['root']))
+            elif self.dataset['type'] == 6:
+                f.write("trainset = torchvisions.datasets.{0}(root={1}, split=\'train\', download=True,"
+                        "transform=transform)\n".format(self.dataset['name'], self.dataset['para']['root']))
+
 
 class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
     def __init__(self):
@@ -280,7 +333,7 @@ class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
         self.setupUi(self)
         space = "    "
         self.codefield.setPlainText("from torch.utils.data import DataLoader, Dataset\n\nclass MyDataset(Dataset):\n")
-        self.codefield.append(space+"def __init__(self, root_dir, transform=None):#初始化参数\n{}\n{}\n".format(space*2))
+        self.codefield.append(space+"def __init__(self):#初始化参数\n{}\n{}\n".format(space*2))
         self.codefield.append(space+"def __len__(self):#返回整个数据集的大小\n{}\n{}\n".format(space*2))
         self.codefield.append(space+"def __getitem__(self, index):#根据索引index返回dataset[index]\n{}\n{}\n".format(space*2))
 
@@ -306,7 +359,7 @@ class NewLossWindow(QDialog, Ui_NewDatasetWindow):
         self.codefield.append(space*2+"return ")
 
     def accept(self):
-        filename, _ = QFileDialog.getSaveFileName(self, '储存数据集', '/', 'Python Files (*.py)')
+        filename, _ = QFileDialog.getSaveFileName(self, '储存损失函数', '/', 'Python Files (*.py)')
         text = self.codefield.toPlainText()
         with open(filename, 'w') as f:
             f.write(text)

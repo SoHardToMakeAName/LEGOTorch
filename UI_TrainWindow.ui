@@ -14,6 +14,12 @@
    <string>训练</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2"/>
+   </item>
+   <item row="0" column="1">
+    <widget class="QTextBrowser" name="log"/>
+   </item>
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0" colspan="2">
@@ -267,11 +273,11 @@
      </item>
     </layout>
    </item>
-   <item row="0" column="1">
-    <widget class="QTextBrowser" name="log"/>
+   <item row="1" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_3"/>
    </item>
-   <item row="1" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <item row="2" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="start_button">
        <property name="text">
@@ -293,10 +299,13 @@
        </property>
       </widget>
      </item>
-    </layout>
-   </item>
-   <item row="1" column="1">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="show_button">
+       <property name="text">
+        <string>显示</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="load_button">
        <property name="text">
@@ -308,13 +317,6 @@
       <widget class="QPushButton" name="save_button">
        <property name="text">
         <string>保存</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="show_button">
-       <property name="text">
-        <string>显示</string>
        </property>
       </widget>
      </item>
@@ -347,8 +349,8 @@
    <slot>load_dataset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>310</x>
-     <y>51</y>
+     <x>341</x>
+     <y>184</y>
     </hint>
     <hint type="destinationlabel">
      <x>348</x>
@@ -363,8 +365,8 @@
    <slot>load_loss_function()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>289</x>
-     <y>77</y>
+     <x>341</x>
+     <y>334</y>
     </hint>
     <hint type="destinationlabel">
      <x>346</x>
@@ -379,12 +381,108 @@
    <slot>load_optim()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>297</x>
-     <y>356</y>
+     <x>341</x>
+     <y>485</y>
     </hint>
     <hint type="destinationlabel">
      <x>346</x>
      <y>366</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>start_button</sender>
+   <signal>clicked()</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>start()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>74</x>
+     <y>637</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>83</x>
+     <y>660</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>halt_button</sender>
+   <signal>clicked()</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>stop()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>214</x>
+     <y>640</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>222</x>
+     <y>661</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>reset_button</sender>
+   <signal>clicked()</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>reset()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>299</x>
+     <y>646</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>321</x>
+     <y>662</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>show_button</sender>
+   <signal>clicked()</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>show_result()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>441</x>
+     <y>645</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>456</x>
+     <y>663</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>load_button</sender>
+   <signal>clicked()</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>load_script()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>569</x>
+     <y>641</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>590</x>
+     <y>662</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>save_button</sender>
+   <signal>clicked()</signal>
+   <receiver>UI_TrainWindow</receiver>
+   <slot>save()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>685</x>
+     <y>638</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>713</x>
+     <y>661</y>
     </hint>
    </hints>
   </connection>
@@ -394,5 +492,11 @@
   <slot>load_model()</slot>
   <slot>load_loss_function()</slot>
   <slot>load_optim()</slot>
+  <slot>start()</slot>
+  <slot>stop()</slot>
+  <slot>reset()</slot>
+  <slot>show_result()</slot>
+  <slot>load_script()</slot>
+  <slot>save()</slot>
  </slots>
 </ui>
