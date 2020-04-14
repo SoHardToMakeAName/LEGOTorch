@@ -77,11 +77,11 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.batch_size.setValidator(pValidator)
         self.shuffle = QCheckBox("shuffle")
         self.drop_last = QCheckBox("drop last")
-        label_sampler = QLabel("采样器(Sampler)")
-        self.sampler = QComboBox()
-        self.sampler.addItem("Sequential")
-        self.sampler.addItem("Random")
-        self.sampler.addItem("自定义")
+        # label_sampler = QLabel("采样器(Sampler)")
+        # self.sampler = QComboBox()
+        # self.sampler.addItem("Sequential")
+        # self.sampler.addItem("Random")
+        # # self.sampler.addItem("自定义")
         self.dataset_layout.addWidget(self.resize, 0, 0)
         self.dataset_layout.addWidget(self.resize_h, 0, 1)
         self.dataset_layout.addWidget(QLabel("X"), 0, 2)
@@ -90,8 +90,8 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.dataset_layout.addWidget(self.batch_size, 1, 1)
         self.dataset_layout.addWidget(self.shuffle, 2, 0)
         self.dataset_layout.addWidget(self.drop_last, 2, 1)
-        self.dataset_layout.addWidget(label_sampler, 3, 0)
-        self.dataset_layout.addWidget(self.sampler, 3, 1)
+        # self.dataset_layout.addWidget(label_sampler, 3, 0)
+        # self.dataset_layout.addWidget(self.sampler, 3, 1)
 
     def load_loss_function(self):
         while self.loss_layout.count():
@@ -163,6 +163,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             label_lr = QLabel("learning rate:")
             self.lr = QLineEdit()
             self.lr.setValidator(pValidator2)
+            self.lr.setText("0.001")
             label_momentum = QLabel("momentum:")
             self.momuntum = QLineEdit()
             self.momuntum.setValidator(pValidator2)
@@ -293,11 +294,13 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         with open("tmp.py", 'w') as f:
             space = "    "
             f.write("import torch\nimport sys\nimport torchvision\nimport torchvision.transforms as transforms\n"
-                    "import torch.optim as optim\nimport torch.nn as nn\n")
+                    "import torch.optim as optim\nimport torch.nn as nn\nfrom torch.utils.data import DataLoader\n")
+            f.write("device = torch.device(\"cuda:0\" if torch.cuda.is_available() else \"cpu\")\n")
             if self.model['type'] == 1:
                 f.write("sys.path.append(r\'{}\')\n".format(self.model['dir']))
                 f.write("from {} import Net\n".format(self.model['module']))
                 f.write("net = Net()\n")
+                f.write(net.to(device))
             else:
                 f.write("import torchvision.models as models\n")
                 if self.is_pretrained:
@@ -325,6 +328,62 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             elif self.dataset['type'] == 6:
                 f.write("trainset = torchvisions.datasets.{0}(root={1}, split=\'train\', download=True,"
                         "transform=transform)\n".format(self.dataset['name'], self.dataset['para']['root']))
+            f.write("trainloader = DataLoader(trainset, batch_size={}, shuffle={}, drop_last={}".format(
+                self.batch_size.text(), self.shuffle.text(), self.drop_last.text()
+            ))
+            if self.loss['type'] == 1:
+                f.write("sys.path.append(r\'{}\')\n".format(self.loss['dir']))
+                f.write("from {} import MyLoss\n".format(self.loss['module']))
+                f.write("criterion = MyLoss()\n")
+            elif self.loss_to_load.currentIndex() in [3, 4, 5, 6]:
+                f.write("criterion = nn.{}(reduction={})\n".format(self.loss['name'], self.reduction.currentText()))
+            elif self.loss_to_load.currentIndex() == 7:
+                f.write("criterion = nn.{}(reduction={}, margin={}, eps={})\n".format(self.loss['name'],
+                        self.reduction.currentText(), self.p.text(), self.eps.text()))
+            if self.optim['type'] == 1:
+                f.write("optimizer = optim.SGD(net.parameters(), lr={}, momentum={}, dempening={}, weight_decay={}, "
+                        "nesterov={})\n".format(self.lr.text(), self.momuntum.text(), self.dampening.text()
+                                                ,self.weight_decay.text(), self.nesterov.text()))
+            elif self.optim['type'] == 2:
+                f.write("optimizer = optim.Adam(net.parameters(), lr={}, betas=({},{}), eps={}, weight_decay={}"
+                        ", amsgrad={})\n".format(self.lr.text(), self.beta_1.text(), self.beta_2.text(),
+                                                 self.eps.text(), self.weight_decay.text(), self.amsgrad.text()))
+            elif self.optim['type'] == 3:
+                f.write("optimizer = optim.Adadelta(net.parameters(), lr={}, rho={}, eps={}, weight_decay={})\n".format(
+                    self.lr.text(), self.rho.text(), self.eps.text(), self.weight_decay.text()))
+            elif self.optm['type'] == 4:
+                f.write("optimizer = optim.RMSprop(net.parameters(), lr={}, alpha={}, eps={}, weight_decay={},"
+                        "momentum={}, centered={})\n".format(self.lr.text(), self.alpha.text(), self.eps.text(),
+                                                          self.weight_decay.text(), self.momuntum.text(),
+                                                          self.centered.text()))
+            if self.epochs.text() == "":
+                f.write("epochs = 1000\n")
+            else:
+                f.write("epochs = {}\n".format(self.epochs.text()))
+            if self.show_every.text() == "":
+                f.write("show_every = 50\n")
+            else:
+                f.write("show_every = {}\n".format(self.show_every.text()))
+            if self.save_every.text() == "":
+                f.write("epochs = 100\n")
+            else:
+                f.write("epochs = {}".format(self.save_every.text()))
+            f.write("for epoch in range(epochs):\n")
+            f.write(space+"running_loss = 0.0\n")
+            f.write(space+"for i, data in enumerate(trainLoader, 0):\n")
+            f.write(space*2+"inputs, labels = data[0].to(device), data[1].to(device)\n")
+            f.write(space*2+"optimizer.zero_grad()\n")
+            f.write(space*2+"outputs = net(inputs)\n")
+            f.write(space * 2 + "loss = criterion(outputs, labels)\n")
+            f.write(space * 2 + "loss.backward()\n")
+            f.write(space * 2 + "optimizer.step()\n")
+            f.write(space * 2 + "running_loss += loss.item()\n")
+            f.write(space*2+"if (i+1) % show_every == 0:\n")
+            f.write(space * 3 + "print(\'[%d] loss: %.3f\' % (epoch+1, running_loss)\n")
+            f.write(space*3+"running_loss = 0.0")
+            f.write(space * 2 + "if (i+1) % save_every == 0:\n")
+            f.write(space * 3 + "torch.save(net, '.\n")
+            f.write(space * 3 + "running_loss = 0.0")
 
 
 class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
