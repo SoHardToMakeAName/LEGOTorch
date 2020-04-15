@@ -8,6 +8,7 @@ from pyqtgraph.flowchart import Flowchart
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import os
+import subprocess as sub
 
 class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
     def __init__(self):
@@ -17,6 +18,21 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.dataset = dict()
         self.optim = dict()
         self.loss = dict()
+        reg = QRegExp('[0-9]+$')
+        pValidator = QRegExpValidator(self)
+        pValidator.setRegExp(reg)
+        self.epochs = QLineEdit()
+        self.epochs.setValidator(pValidator)
+        self.show_every = QLineEdit()
+        self.show_every.setValidator(pValidator)
+        self.save_every = QLineEdit()
+        self.save_every.setValidator(pValidator)
+        self.bottom_layout.addWidget(QLabel("epochs"), 0 ,0)
+        self.bottom_layout.addWidget(self.epochs, 0, 1)
+        self.bottom_layout.addWidget(QLabel("显示频率:"), 1, 0)
+        self.bottom_layout.addWidget(self.show_every, 1, 1)
+        self.bottom_layout.addWidget(QLabel("储存频率:"), 2, 0)
+        self.bottom_layout.addWidget(self.save_every, 2, 1)
 
     def load_model(self):
         while self.pretrained_layout.count():
@@ -278,19 +294,20 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.optim_layout.addWidget(self.weight_decay, 2, 1)
             self.optim_layout.addWidget(self.centered, 2, 2)
 
-    def start(self):
-        if self.model_to_load.currentIndex() == 1:
+    def start(self, state=0):
+        if self.model_to_load.currentIndex() == 0:
             QMessageBox.warning(self, "警告", "未加载模型")
             return 0
-        if self.dataset_to_load.currentIndex() == 1:
+        if self.dataset_to_load.currentIndex() == 0:
             QMessageBox.warning(self, "警告", "未加载数据集")
             return 0
-        if self.loss_to_load.currentIndex() == 1:
+        if self.loss_to_load.currentIndex() == 0:
             QMessageBox.warning(self, "警告", "未选择损失函数")
             return 0
-        if self.optim_to_load.currentIndex() == 1:
+        if self.optim_to_load.currentIndex() == 0:
             QMessageBox.warning(self, "警告", "未选择优化器")
             return 0
+        appended_dirs = list()
         with open("tmp.py", 'w') as f:
             space = "    "
             f.write("import torch\nimport sys\nimport torchvision\nimport torchvision.transforms as transforms\n"
@@ -298,16 +315,17 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             f.write("device = torch.device(\"cuda:0\" if torch.cuda.is_available() else \"cpu\")\n")
             if self.model['type'] == 1:
                 f.write("sys.path.append(r\'{}\')\n".format(self.model['dir']))
+                appended_dirs.append(self.model['dir'])
                 f.write("from {} import Net\n".format(self.model['module']))
                 f.write("net = Net()\n")
-                f.write(net.to(device))
+                f.write("net.to(device)\n")
             else:
                 f.write("import torchvision.models as models\n")
-                if self.is_pretrained:
+                if self.is_pretrained.isChecked():
                     f.write("net = models.{}(pretrained=True)\n".format(self.model['name']))
                 else:
                     f.write("net = models.{}(pretrained=False)\n".format(self.model['name']))
-            if self.resize_w.text() == "" or self.resize_h.text() == "":
+            if self.resize_w.text() == "" or self.resize_h.text() == "" or self.resize is False:
                 f.write("transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize"
                         "(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])\n")
             else:
@@ -316,7 +334,9 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                     self.resize_h.text(), self.resize_w.text()
                 ))
             if self.dataset['type'] == 1:
-                f.write("sys.path.append(r\'{}\')\n".format(self.dataset['dir']))
+                if self.dataset['dir'] not in appended_dirs:
+                    f.write("sys.path.append(r\'{}\')\n".format(self.dataset['dir']))
+                    appended_dirs.append(self.dataset['dir'])
                 f.write("from {} import MyDataset\n".format(self.dataset['module']))
                 f.write("trainset = MyDataset()\n")
             elif self.dataset['type'] in [3, 7]:
@@ -328,11 +348,13 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             elif self.dataset['type'] == 6:
                 f.write("trainset = torchvisions.datasets.{0}(root={1}, split=\'train\', download=True,"
                         "transform=transform)\n".format(self.dataset['name'], self.dataset['para']['root']))
-            f.write("trainloader = DataLoader(trainset, batch_size={}, shuffle={}, drop_last={}".format(
-                self.batch_size.text(), self.shuffle.text(), self.drop_last.text()
+            f.write("trainloader = DataLoader(trainset, batch_size={}, shuffle={}, drop_last={})\n".format(
+                self.batch_size.text(), self.shuffle.text(), self.drop_last.isChecked()
             ))
             if self.loss['type'] == 1:
-                f.write("sys.path.append(r\'{}\')\n".format(self.loss['dir']))
+                if self.loss['dir'] not in appended_dirs:
+                    f.write("sys.path.append(r\'{}\')\n".format(self.loss['dir']))
+                    appended_dirs.append(self.loss['dir'])
                 f.write("from {} import MyLoss\n".format(self.loss['module']))
                 f.write("criterion = MyLoss()\n")
             elif self.loss_to_load.currentIndex() in [3, 4, 5, 6]:
@@ -343,11 +365,11 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             if self.optim['type'] == 1:
                 f.write("optimizer = optim.SGD(net.parameters(), lr={}, momentum={}, dempening={}, weight_decay={}, "
                         "nesterov={})\n".format(self.lr.text(), self.momuntum.text(), self.dampening.text()
-                                                ,self.weight_decay.text(), self.nesterov.text()))
+                                                ,self.weight_decay.text(), self.nesterov.isChecked()))
             elif self.optim['type'] == 2:
                 f.write("optimizer = optim.Adam(net.parameters(), lr={}, betas=({},{}), eps={}, weight_decay={}"
                         ", amsgrad={})\n".format(self.lr.text(), self.beta_1.text(), self.beta_2.text(),
-                                                 self.eps.text(), self.weight_decay.text(), self.amsgrad.text()))
+                                                 self.eps.text(), self.weight_decay.text(), self.amsgrad.isChecked()))
             elif self.optim['type'] == 3:
                 f.write("optimizer = optim.Adadelta(net.parameters(), lr={}, rho={}, eps={}, weight_decay={})\n".format(
                     self.lr.text(), self.rho.text(), self.eps.text(), self.weight_decay.text()))
@@ -355,7 +377,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 f.write("optimizer = optim.RMSprop(net.parameters(), lr={}, alpha={}, eps={}, weight_decay={},"
                         "momentum={}, centered={})\n".format(self.lr.text(), self.alpha.text(), self.eps.text(),
                                                           self.weight_decay.text(), self.momuntum.text(),
-                                                          self.centered.text()))
+                                                          self.centered.isChecked()))
             if self.epochs.text() == "":
                 f.write("epochs = 1000\n")
             else:
@@ -365,9 +387,9 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             else:
                 f.write("show_every = {}\n".format(self.show_every.text()))
             if self.save_every.text() == "":
-                f.write("epochs = 100\n")
+                f.write("save_every = 100\n")
             else:
-                f.write("epochs = {}".format(self.save_every.text()))
+                f.write("save_every = {}\n".format(self.save_every.text()))
             f.write("for epoch in range(epochs):\n")
             f.write(space+"running_loss = 0.0\n")
             f.write(space+"for i, data in enumerate(trainLoader, 0):\n")
@@ -379,12 +401,30 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             f.write(space * 2 + "optimizer.step()\n")
             f.write(space * 2 + "running_loss += loss.item()\n")
             f.write(space*2+"if (i+1) % show_every == 0:\n")
-            f.write(space * 3 + "print(\'[%d] loss: %.3f\' % (epoch+1, running_loss)\n")
-            f.write(space*3+"running_loss = 0.0")
+            f.write(space * 3 + "print(\'epoch %d loss: %.3f\' % (epoch+1, running_loss))\n")
             f.write(space * 2 + "if (i+1) % save_every == 0:\n")
-            f.write(space * 3 + "torch.save(net, '.\n")
-            f.write(space * 3 + "running_loss = 0.0")
+            f.write(space * 3 + "torch.save(net.state_dict(), \'\\save_model_{}\'.format(i+1))\n")
+            # self.p = sub.Popen("py -3 tmp.py", encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT, shell=True)
+            # while True:
+            #     buff = self.p.stdout.readline()
+            #     if buff == '' and p.poll() != None:
+            #         break
+            #     self.log.append(buff)
 
+    def stop(self):
+        pass
+
+    def reset(self):
+        pass
+
+    def show_result(self):
+        pass
+
+    def load_script(self):
+        pass
+
+    def save(self):
+        pass
 
 class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
     def __init__(self):

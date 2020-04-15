@@ -157,6 +157,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         filedir, filename_text = os.path.split(filename)
         filename_text = filename_text.split(".")[0]
         if self.check() == 0:
+            QMessageBox.warning(self, "错误", "出现size<=0或模型没有输出")
             return 0
         sort = list(nx.topological_sort(self.net))
         content = list()
