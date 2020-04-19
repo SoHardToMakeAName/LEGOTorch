@@ -7,8 +7,11 @@ from PyQt5.QtGui import QRegExpValidator
 from pyqtgraph.flowchart import Flowchart
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-import os
+import os, shutil
 import subprocess as sub
+import torchvision
+import sys
+import re
 
 class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
     def __init__(self):
@@ -18,6 +21,11 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.dataset = dict()
         self.optim = dict()
         self.loss = dict()
+        self.p = None
+        self.data_x = list()
+        self.data_loss = list()
+        self.data_acc = list()
+        self.curve = None
         reg = QRegExp('[0-9]+$')
         pValidator = QRegExpValidator(self)
         pValidator.setRegExp(reg)
@@ -41,6 +49,8 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 child.widget().deleteLater()
         if self.model_to_load.currentIndex() == 1:
             filename, _ = QFileDialog.getOpenFileName(self, '加载模型', '/', 'Python Files (*.py)')
+            if filename is None or filename == "":
+                return 0
             filedir, filename_text = os.path.split(filename)
             self.model['type'] = 1
             self.model['dir'] = filedir
@@ -60,6 +70,8 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 child.widget().deleteLater()
         if self.dataset_to_load.currentIndex() == 1:
             filename, _ = QFileDialog.getOpenFileName(self, '加载数据集', '/', 'Python Files (*.py)')
+            if filename is None or filename == "":
+                return 0
             filedir, filename_text = os.path.split(filename)
             self.dataset['type'] = 1
             self.dataset['dir'] = filedir
@@ -116,6 +128,8 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 child.widget().deleteLater()
         if self.loss_to_load.currentIndex() == 1:
             filename, _ = QFileDialog.getOpenFileName(self, '加载损失函数', '/', 'Python Files (*.py)')
+            if filename is None or filename == "":
+                return 0
             filedir, filename_text = os.path.split(filename)
             self.loss['type'] = 1
             self.loss['dir'] = filedir
@@ -294,7 +308,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.optim_layout.addWidget(self.weight_decay, 2, 1)
             self.optim_layout.addWidget(self.centered, 2, 2)
 
-    def start(self, state=0):
+    def start(self):
         if self.model_to_load.currentIndex() == 0:
             QMessageBox.warning(self, "警告", "未加载模型")
             return 0
@@ -340,13 +354,13 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 f.write("from {} import MyDataset\n".format(self.dataset['module']))
                 f.write("trainset = MyDataset()\n")
             elif self.dataset['type'] in [3, 7]:
-                f.write("trainset = torchvisions.datasets.{}(root={}, train=True, transform=transform, download="
+                f.write("trainset = torchvision.datasets.{}(root={}, train=True, transform=transform, download="
                         "True)\n".format(self.dataset['name'], self.dataset['para']['root']))
             elif self.dataset['type'] in [4, 5]:
-                f.write("trainset = torchvisions.datasets.{0}(root={1}, annFile={1}, transform=transform)\n".format(
+                f.write("trainset = torchvision.datasets.{0}(root={1}, annFile={1}, transform=transform)\n".format(
                     self.dataset['name'], self.dataset['para']['root']))
             elif self.dataset['type'] == 6:
-                f.write("trainset = torchvisions.datasets.{0}(root={1}, split=\'train\', download=True,"
+                f.write("trainset = torchvision.datasets.{0}(root={1}, split=\'train\', download=True,"
                         "transform=transform)\n".format(self.dataset['name'], self.dataset['para']['root']))
             f.write("trainloader = DataLoader(trainset, batch_size={}, shuffle={}, drop_last={})\n".format(
                 self.batch_size.text(), self.shuffle.text(), self.drop_last.isChecked()
@@ -404,15 +418,20 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             f.write(space * 3 + "print(\'epoch %d loss: %.3f\' % (epoch+1, running_loss))\n")
             f.write(space * 2 + "if (i+1) % save_every == 0:\n")
             f.write(space * 3 + "torch.save(net.state_dict(), \'\\save_model_{}\'.format(i+1))\n")
-            # self.p = sub.Popen("py -3 tmp.py", encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT, shell=True)
-            # while True:
-            #     buff = self.p.stdout.readline()
-            #     if buff == '' and p.poll() != None:
-            #         break
-            #     self.log.append(buff)
+            self.p = sub.Popen("py -3 tmp.py", encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
+            while True:
+                buff = self.p.stdout.readline()
+                if buff == '' and self.p.poll() != None:
+                    break
+                if buff != '':
+                    self.log.append(buff)
+                    self.cursor = self.log.textCursor()
+                    self.log.moveCursor(self.cursor.End)
+                    QApplication.processEvents()
 
     def stop(self):
-        pass
+        if self.p is not None and self.p.poll() is None:
+            self.p.kill()
 
     def reset(self):
         pass
@@ -421,10 +440,38 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         pass
 
     def load_script(self):
-        pass
+        has_set = False
+        filename, _ = QFileDialog.getOpenFileName(self, '加载脚本', '/', 'Python Files (*.py)')
+        if self.p is not None and self.p.poll() is None:
+            self.p.kill()
+        self.p = sub.Popen("py -3 {}".format(filename), stdout=sub.PIPE, stderr=sub.STDOUT, encoding='utf-8')
+        while True:
+            next_line = self.p.stdout.readline()
+            if next_line == '' and self.p.poll() is not None:
+                break
+            if next_line != '':
+                self.log.append(next_line)
+                self.cursor = self.log.textCursor()
+                self.log.moveCursor(self.cursor.End)
+                QApplication.processEvents()
+                patten = re.compile('([0-9]+(([.]?[0-9]*)|([eE]?[-]?[0-9]*)))')
+                result = patten.findall(next_line)
+                if len(result) >= 2:
+                    if not has_set:
+                        has_set = True
+                        self.curve = PlotWindowCustom()
+                        self.curve.setPw(1)
+                        self.curve.show()
+                    self.data_x.append(float(result[0][0]))
+                    self.data_loss.append(float(result[1][0]))
+                    self.curve.plot(data_x=self.data_x, data_y=self.data_loss)
 
     def save(self):
-        pass
+        filename, _ = QFileDialog.getSaveFileName(self, '导出脚本', '/', 'Python Files (*.py)')
+        if filename is None or filename == "":
+            return 0
+        if os.path.exists('tmp.py'):
+            shutil.copyfile('tmp.py', filename)
 
 class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
     def __init__(self):
@@ -466,3 +513,24 @@ class NewLossWindow(QDialog, Ui_NewDatasetWindow):
 
     def reject(self):
         self.destroy()
+
+
+class PlotWindowCustom(QMainWindow):
+    def __init__(self):
+        super(QMainWindow,self).__init__()
+        self.resize(450, 350)
+        self.setWindowTitle("训练图示")
+        self.cw = QtGui.QWidget()
+        self.setCentralWidget(self.cw)
+        self.l = QtGui.QVBoxLayout()
+        self.cw.setLayout(self.l)
+        self.pw = pg.PlotWidget()
+        self.l.addWidget(self.pw)
+
+    def setPw(self, type):
+        if type == 1:
+            self.pw.setLabel('left', 'loss')
+            self.pw.setLabel('bottom', 'epoch')
+
+    def plot(self, data_x, data_y):
+        self.pw.plot(x=data_x, y=data_y)
