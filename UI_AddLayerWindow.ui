@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>新建一个层</string>
+   <string>层操作</string>
   </property>
   <widget class="QWidget" name="gridLayoutWidget">
    <property name="geometry">

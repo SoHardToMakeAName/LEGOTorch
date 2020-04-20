@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'UI_TrainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.9
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -24,7 +24,6 @@ class Ui_UI_TrainWindow(object):
         self.widget_3 = QtWidgets.QWidget(UI_TrainWindow)
         self.widget_3.setObjectName("widget_3")
         self.gridLayout_6 = QtWidgets.QGridLayout(self.widget_3)
-        self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_6.setObjectName("gridLayout_6")
         self.loss_layout = QtWidgets.QGridLayout()
         self.loss_layout.setObjectName("loss_layout")
@@ -33,7 +32,6 @@ class Ui_UI_TrainWindow(object):
         self.widget = QtWidgets.QWidget(UI_TrainWindow)
         self.widget.setObjectName("widget")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.widget)
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.pretrained_layout = QtWidgets.QVBoxLayout()
         self.pretrained_layout.setObjectName("pretrained_layout")
@@ -42,7 +40,6 @@ class Ui_UI_TrainWindow(object):
         self.widget_2 = QtWidgets.QWidget(UI_TrainWindow)
         self.widget_2.setObjectName("widget_2")
         self.gridLayout_5 = QtWidgets.QGridLayout(self.widget_2)
-        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_5.setObjectName("gridLayout_5")
         self.dataset_layout = QtWidgets.QGridLayout()
         self.dataset_layout.setObjectName("dataset_layout")
@@ -108,7 +105,6 @@ class Ui_UI_TrainWindow(object):
         self.widget_4 = QtWidgets.QWidget(UI_TrainWindow)
         self.widget_4.setObjectName("widget_4")
         self.gridLayout_7 = QtWidgets.QGridLayout(self.widget_4)
-        self.gridLayout_7.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_7.setObjectName("gridLayout_7")
         self.optim_layout = QtWidgets.QGridLayout()
         self.optim_layout.setObjectName("optim_layout")
@@ -130,9 +126,6 @@ class Ui_UI_TrainWindow(object):
         self.reset_button = QtWidgets.QPushButton(UI_TrainWindow)
         self.reset_button.setObjectName("reset_button")
         self.horizontalLayout.addWidget(self.reset_button)
-        self.show_button = QtWidgets.QPushButton(UI_TrainWindow)
-        self.show_button.setObjectName("show_button")
-        self.horizontalLayout.addWidget(self.show_button)
         self.load_button = QtWidgets.QPushButton(UI_TrainWindow)
         self.load_button.setObjectName("load_button")
         self.horizontalLayout.addWidget(self.load_button)
@@ -149,7 +142,6 @@ class Ui_UI_TrainWindow(object):
         self.start_button.clicked.connect(UI_TrainWindow.start)
         self.halt_button.clicked.connect(UI_TrainWindow.stop)
         self.reset_button.clicked.connect(UI_TrainWindow.reset)
-        self.show_button.clicked.connect(UI_TrainWindow.show_result)
         self.load_button.clicked.connect(UI_TrainWindow.load_script)
         self.save_button.clicked.connect(UI_TrainWindow.save)
         QtCore.QMetaObject.connectSlotsByName(UI_TrainWindow)
@@ -193,11 +185,10 @@ class Ui_UI_TrainWindow(object):
         self.dataset_to_load.setItemText(4, _translate("UI_TrainWindow", "COCO_Caption"))
         self.dataset_to_load.setItemText(5, _translate("UI_TrainWindow", "COCO_Detection"))
         self.dataset_to_load.setItemText(6, _translate("UI_TrainWindow", "ImageNet"))
-        self.dataset_to_load.setItemText(7, _translate("UI_TrainWindow", "CIFAR"))
+        self.dataset_to_load.setItemText(7, _translate("UI_TrainWindow", "CIFAR10"))
         self.start_button.setText(_translate("UI_TrainWindow", "开始"))
         self.halt_button.setText(_translate("UI_TrainWindow", "停止"))
         self.reset_button.setText(_translate("UI_TrainWindow", "重置"))
-        self.show_button.setText(_translate("UI_TrainWindow", "显示"))
         self.load_button.setText(_translate("UI_TrainWindow", "加载"))
         self.save_button.setText(_translate("UI_TrainWindow", "保存"))
 

@@ -43,7 +43,6 @@
     </property>
     <addaction name="AddLayer"/>
     <addaction name="AddModel"/>
-    <addaction name="action"/>
    </widget>
    <addaction name="Function"/>
    <addaction name="FileSet"/>
@@ -52,7 +51,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="ToDataset">
    <property name="text">
-    <string>数据集</string>
+    <string>测试</string>
    </property>
   </action>
   <action name="ToTrain">
@@ -146,6 +145,22 @@
    <signal>triggered()</signal>
    <receiver>ModelWindow</receiver>
    <slot>to_train()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>319</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AddModel</sender>
+   <signal>triggered()</signal>
+   <receiver>ModelWindow</receiver>
+   <slot>add_layer()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

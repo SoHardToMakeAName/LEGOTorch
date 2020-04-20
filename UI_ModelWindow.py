@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'UI_ModelWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.9
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -50,7 +50,6 @@ class Ui_ModelWindow(object):
         self.FileSet.addAction(self.ExportFile)
         self.Add.addAction(self.AddLayer)
         self.Add.addAction(self.AddModel)
-        self.Add.addAction(self.action)
         self.menubar.addAction(self.Function.menuAction())
         self.menubar.addAction(self.FileSet.menuAction())
         self.menubar.addAction(self.Add.menuAction())
@@ -60,6 +59,7 @@ class Ui_ModelWindow(object):
         self.ExportFile.triggered.connect(ModelWindow.export_file)
         self.InportFile.triggered.connect(ModelWindow.import_file)
         self.ToTrain.triggered.connect(ModelWindow.to_train)
+        self.AddModel.triggered.connect(ModelWindow.add_layer)
         QtCore.QMetaObject.connectSlotsByName(ModelWindow)
 
     def retranslateUi(self, ModelWindow):
@@ -68,7 +68,7 @@ class Ui_ModelWindow(object):
         self.Function.setTitle(_translate("ModelWindow", "功能"))
         self.FileSet.setTitle(_translate("ModelWindow", "脚本"))
         self.Add.setTitle(_translate("ModelWindow", "层"))
-        self.ToDataset.setText(_translate("ModelWindow", "数据集"))
+        self.ToDataset.setText(_translate("ModelWindow", "测试"))
         self.ToTrain.setText(_translate("ModelWindow", "训练"))
         self.InportFile.setText(_translate("ModelWindow", "导入"))
         self.ExportFile.setText(_translate("ModelWindow", "导出"))

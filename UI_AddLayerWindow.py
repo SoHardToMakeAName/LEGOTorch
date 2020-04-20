@@ -84,7 +84,7 @@ class Ui_AddLayerWindow(object):
 
     def retranslateUi(self, AddLayerWindow):
         _translate = QtCore.QCoreApplication.translate
-        AddLayerWindow.setWindowTitle(_translate("AddLayerWindow", "新建一个层"))
+        AddLayerWindow.setWindowTitle(_translate("AddLayerWindow", "层操作"))
         self.type.setText(_translate("AddLayerWindow", "类型："))
         self.label.setText(_translate("AddLayerWindow", "输入："))
         self.layertype.setItemText(0, _translate("AddLayerWindow", "<选择一种层>"))

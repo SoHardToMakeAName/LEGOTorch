@@ -145,7 +145,6 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             if self.loss_to_load.currentIndex() in [3, 4, 5, 6]:
                 label_reduction = QLabel("reduction:")
                 self.reduction = QComboBox()
-                self.reduction.addItem("none")
                 self.reduction.addItem("mean")
                 self.reduction.addItem("sum")
                 self.loss_layout.addWidget(label_reduction, 0, 0)
@@ -167,7 +166,6 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 self.p.setText("2")
                 label_reduction = QLabel("reduction:")
                 self.reduction = QComboBox()
-                self.reduction.addItem("none")
                 self.reduction.addItem("mean")
                 self.reduction.addItem("sum")
                 self.loss_layout.addWidget(label_margin, 0, 0)
@@ -339,12 +337,13 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                     f.write("net = models.{}(pretrained=True)\n".format(self.model['name']))
                 else:
                     f.write("net = models.{}(pretrained=False)\n".format(self.model['name']))
+            f.write("###load net\n")
             if self.resize_w.text() == "" or self.resize_h.text() == "" or self.resize is False:
                 f.write("transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize"
-                        "(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])\n")
+                        "(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])])\n")
             else:
                 f.write("transform = transforms.Compose([transforms.Resize(size=({},{}),transfroms.ToTensor(), "
-                        "transforms.Normalize(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])\n".format(
+                        "transforms.Normalize(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])])\n".format(
                     self.resize_h.text(), self.resize_w.text()
                 ))
             if self.dataset['type'] == 1:
@@ -354,7 +353,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 f.write("from {} import MyDataset\n".format(self.dataset['module']))
                 f.write("trainset = MyDataset()\n")
             elif self.dataset['type'] in [3, 7]:
-                f.write("trainset = torchvision.datasets.{}(root={}, train=True, transform=transform, download="
+                f.write("trainset = torchvision.datasets.{}(root=\'{}\', train=True, transform=transform, download="
                         "True)\n".format(self.dataset['name'], self.dataset['para']['root']))
             elif self.dataset['type'] in [4, 5]:
                 f.write("trainset = torchvision.datasets.{0}(root={1}, annFile={1}, transform=transform)\n".format(
@@ -363,7 +362,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 f.write("trainset = torchvision.datasets.{0}(root={1}, split=\'train\', download=True,"
                         "transform=transform)\n".format(self.dataset['name'], self.dataset['para']['root']))
             f.write("trainloader = DataLoader(trainset, batch_size={}, shuffle={}, drop_last={})\n".format(
-                self.batch_size.text(), self.shuffle.text(), self.drop_last.isChecked()
+                self.batch_size.text(), self.shuffle.isChecked(), self.drop_last.isChecked()
             ))
             if self.loss['type'] == 1:
                 if self.loss['dir'] not in appended_dirs:
@@ -372,12 +371,12 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 f.write("from {} import MyLoss\n".format(self.loss['module']))
                 f.write("criterion = MyLoss()\n")
             elif self.loss_to_load.currentIndex() in [3, 4, 5, 6]:
-                f.write("criterion = nn.{}(reduction={})\n".format(self.loss['name'], self.reduction.currentText()))
+                f.write("criterion = nn.{}(reduction=\'{}\')\n".format(self.loss['name'], self.reduction.currentText()))
             elif self.loss_to_load.currentIndex() == 7:
-                f.write("criterion = nn.{}(reduction={}, margin={}, eps={})\n".format(self.loss['name'],
+                f.write("criterion = nn.{}(reduction=\'{}\', margin={}, eps={})\n".format(self.loss['name'],
                         self.reduction.currentText(), self.p.text(), self.eps.text()))
             if self.optim['type'] == 1:
-                f.write("optimizer = optim.SGD(net.parameters(), lr={}, momentum={}, dempening={}, weight_decay={}, "
+                f.write("optimizer = optim.SGD(net.parameters(), lr={}, momentum={}, dampening={}, weight_decay={}, "
                         "nesterov={})\n".format(self.lr.text(), self.momuntum.text(), self.dampening.text()
                                                 ,self.weight_decay.text(), self.nesterov.isChecked()))
             elif self.optim['type'] == 2:
@@ -406,7 +405,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 f.write("save_every = {}\n".format(self.save_every.text()))
             f.write("for epoch in range(epochs):\n")
             f.write(space+"running_loss = 0.0\n")
-            f.write(space+"for i, data in enumerate(trainLoader, 0):\n")
+            f.write(space+"for i, data in enumerate(trainloader, 0):\n")
             f.write(space*2+"inputs, labels = data[0].to(device), data[1].to(device)\n")
             f.write(space*2+"optimizer.zero_grad()\n")
             f.write(space*2+"outputs = net(inputs)\n")
@@ -414,48 +413,51 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             f.write(space * 2 + "loss.backward()\n")
             f.write(space * 2 + "optimizer.step()\n")
             f.write(space * 2 + "running_loss += loss.item()\n")
-            f.write(space*2+"if (i+1) % show_every == 0:\n")
-            f.write(space * 3 + "print(\'epoch %d loss: %.3f\' % (epoch+1, running_loss))\n")
-            f.write(space * 2 + "if (i+1) % save_every == 0:\n")
-            f.write(space * 3 + "torch.save(net.state_dict(), \'\\save_model_{}\'.format(i+1))\n")
-            self.p = sub.Popen("py -3 tmp.py", encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
-            while True:
-                buff = self.p.stdout.readline()
-                if buff == '' and self.p.poll() != None:
-                    break
-                if buff != '':
-                    self.log.append(buff)
-                    self.cursor = self.log.textCursor()
-                    self.log.moveCursor(self.cursor.End)
-                    QApplication.processEvents()
+            f.write(space+"if (epoch+1) % show_every == 0:\n")
+            f.write(space * 2 + "print(\'epoch %d loss: %.3f\' % (epoch+1, running_loss))\n")
+            f.write(space + "if (epoch+1) % save_every == 0:\n")
+            f.write(space * 2 + "torch.save(net.state_dict(), \'save_model_{}.pth\'.format(epoch+1))\n")
+            self.run_script()
 
     def stop(self):
         if self.p is not None and self.p.poll() is None:
             self.p.kill()
 
     def reset(self):
-        pass
+        filename, _ = QFileDialog.getOpenFileName(self, '加载模型参数', '/', 'Model state dict (*.pth)')
+        if filename is None or filename == "":
+            return 0
+        self.log.setText("")
+        try:
+            with open('tmp.py', 'r', encoding='utf-8') as f1, open('tmpnew.py', 'w') as f2:
+                for line in f1:
+                    if line.startswith('net.load_state_dict'):
+                        continue
+                    f2.write(line)
+                    if line.startswith('###'):
+                        f2.write("net.load_state_dict(torch.load(\'{}\'))\n".format(filename))
+            os.replace('tmpnew.py', 'tmp.py')
+            self.run_script()
+        except:
+            QMessageBox.warning(self, "错误", "找不到文件tmp.py")
 
-    def show_result(self):
-        pass
-
-    def load_script(self):
-        has_set = False
-        filename, _ = QFileDialog.getOpenFileName(self, '加载脚本', '/', 'Python Files (*.py)')
+    def run_script(self, filename='tmp.py'):
+        print("run_script starts!")
         if self.p is not None and self.p.poll() is None:
             self.p.kill()
-        self.p = sub.Popen("py -3 {}".format(filename), stdout=sub.PIPE, stderr=sub.STDOUT, encoding='utf-8')
+        self.p = sub.Popen("py -3 {}".format(filename), encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
+        has_set = False
         while True:
-            next_line = self.p.stdout.readline()
-            if next_line == '' and self.p.poll() is not None:
+            buff = self.p.stdout.readline()
+            if buff == '' and self.p.poll() != None:
                 break
-            if next_line != '':
-                self.log.append(next_line)
+            if buff != '':
+                self.log.append(buff)
                 self.cursor = self.log.textCursor()
                 self.log.moveCursor(self.cursor.End)
                 QApplication.processEvents()
                 patten = re.compile('([0-9]+(([.]?[0-9]*)|([eE]?[-]?[0-9]*)))')
-                result = patten.findall(next_line)
+                result = patten.findall(buff)
                 if len(result) >= 2:
                     if not has_set:
                         has_set = True
@@ -466,12 +468,20 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                     self.data_loss.append(float(result[1][0]))
                     self.curve.plot(data_x=self.data_x, data_y=self.data_loss)
 
+
+    def load_script(self):
+        filename, _ = QFileDialog.getOpenFileName(self, '加载脚本', '/', 'Python Files (*.py)')
+        if filename is None or filename == "":
+            return 0
+        self.run_script(filename=filename)
+
     def save(self):
         filename, _ = QFileDialog.getSaveFileName(self, '导出脚本', '/', 'Python Files (*.py)')
         if filename is None or filename == "":
             return 0
         if os.path.exists('tmp.py'):
             shutil.copyfile('tmp.py', filename)
+
 
 class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
     def __init__(self):
@@ -518,7 +528,7 @@ class NewLossWindow(QDialog, Ui_NewDatasetWindow):
 class PlotWindowCustom(QMainWindow):
     def __init__(self):
         super(QMainWindow,self).__init__()
-        self.resize(450, 350)
+        self.resize(650, 350)
         self.setWindowTitle("训练图示")
         self.cw = QtGui.QWidget()
         self.setCentralWidget(self.cw)
@@ -534,3 +544,4 @@ class PlotWindowCustom(QMainWindow):
 
     def plot(self, data_x, data_y):
         self.pw.plot(x=data_x, y=data_y)
+        QApplication.processEvents()

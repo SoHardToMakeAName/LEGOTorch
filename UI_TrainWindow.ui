@@ -297,13 +297,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="show_button">
-       <property name="text">
-        <string>显示</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="load_button">
        <property name="text">
         <string>加载</string>
@@ -426,28 +419,12 @@
    <slot>reset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>299</x>
-     <y>646</y>
+     <x>441</x>
+     <y>654</y>
     </hint>
     <hint type="destinationlabel">
      <x>321</x>
      <y>662</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>show_button</sender>
-   <signal>clicked()</signal>
-   <receiver>UI_TrainWindow</receiver>
-   <slot>show_result()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>441</x>
-     <y>645</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>456</x>
-     <y>663</y>
     </hint>
    </hints>
   </connection>
