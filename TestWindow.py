@@ -1,11 +1,14 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
-from UI_TestWindow import Ui_TestWindow
+from UI_TestWindow import Ui_TestWindow2
 import os
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QRegExpValidator
+import subprocess as sub
 
-class TestWindow(QDialog, Ui_TestWindow):
+class TestWindow(QDialog, Ui_TestWindow2):
     def __init__(self):
-        super(Ui_TestWindow, self).__init__()
+        super(TestWindow, self).__init__()
         self.setupUi(self)
         self.p = None
         self.model = dict()
@@ -13,32 +16,19 @@ class TestWindow(QDialog, Ui_TestWindow):
         self.script = None
         self.param_path = None
 
-    def run_script(self, filename='tmp.py'):
+    def run_script(self, filename='tmp2.py'):
         print("run_script starts!")
         if self.p is not None and self.p.poll() is None:
             self.p.kill()
         self.p = sub.Popen("py -3 {}".format(filename), encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
-        has_set = False
         while True:
             buff = self.p.stdout.readline()
+            print(buff)
             if buff == '' and self.p.poll() != None:
                 break
             if buff != '':
                 self.log.append(buff)
-                self.cursor = self.log.textCursor()
-                self.log.moveCursor(self.cursor.End)
                 QApplication.processEvents()
-                patten = re.compile('([0-9]+(([.]?[0-9]*)|([eE]?[-]?[0-9]*)))')
-                result = patten.findall(buff)
-                if len(result) >= 2:
-                    if not has_set:
-                        has_set = True
-                        self.curve = PlotWindowCustom()
-                        self.curve.setPw(1)
-                        self.curve.show()
-                    self.data_x.append(float(result[0][0]))
-                    self.data_loss.append(float(result[1][0]))
-                    self.curve.plot(data_x=self.data_x, data_y=self.data_loss)
 
     def load_model(self):
         if self.model_to_load.currentIndex() == 1:
@@ -60,13 +50,15 @@ class TestWindow(QDialog, Ui_TestWindow):
         if filename is None or filename == "":
             return 0
         self.param_path = filename
+        self.log.append("加载模型参数：{}".format(filename))
 
     def load_acc(self):
         if self.acc_to_load.currentIndex() == 1:
-            filename, _ = QFileDialog.getOpenFileName(self, '自定义准确率', '/', 'Python File (*.py)')
+            filename, _ = QFileDialog.getOpenFileName(self, '自定义脚本', '/', 'Python File (*.py)')
             if filename is None or filename == "":
                 return 0
             self.script = filename
+            self.log.append("加载脚本:{}".format(filename))
 
     def load_dataset(self):
         while self.dataset_layout.count():
@@ -121,18 +113,20 @@ class TestWindow(QDialog, Ui_TestWindow):
         # self.dataset_layout.addWidget(self.sampler, 3, 1)
 
     def start(self):
-        if self.dataset_to_load.currentIndex() == 0:
-            QMessageBox.warning(self, "警告", "未加载数据集")
-            return 0
-        if self.model_to_load.currentIndex() == 0:
-            QMessageBox.warning(self, "警告", "未加载模型")
-            return 0
-        if self.param_path is None:
-            QMessageBox.warning(self, "警告", "未加载模型参数")
-            return 0
         if self.acc_to_load.currentIndex() == 1:
             self.run_script(filename=self.script)
         else:
+            if self.dataset_to_load.currentIndex() == 0:
+                QMessageBox.warning(self, "警告", "未加载数据集")
+                return 0
+            if self.model_to_load.currentIndex() == 0:
+                QMessageBox.warning(self, "警告", "未加载模型")
+                return 0
+            if self.param_path is None:
+                QMessageBox.warning(self, "警告", "未加载模型参数")
+                return 0
+            if self.acc_to_load.currentIndex() == 1:
+                self.run_script(filename=self.script)
             space = "    "
             appended_dirs = list()
             with open("tmp2.py", 'w') as f:
@@ -156,13 +150,13 @@ class TestWindow(QDialog, Ui_TestWindow):
                         appended_dirs.append(self.dataset['dir'])
                     f.write("from {} import MyDataset\n".format(self.dataset['module']))
                     f.write("testset = MyDataset()\n")
-                elif self.dataset['type'] in [3, 5]:
+                elif self.dataset['type'] in [2, 4]:
                     f.write("testset = torchvision.datasets.{}(root=\'{}\', train=False, transform=transform, download="
                             "True)\n".format(self.dataset['name'], self.dataset['para']['root']))
-                elif self.dataset['type'] == 4:
+                elif self.dataset['type'] == 3:
                     f.write("testset = torchvision.datasets.{0}(root={1}, split=\'val\', download=True,"
                             "transform=transform)\n".format(self.dataset['name'], self.dataset['para']['root']))
-                f.write("testloader = DataLoader(trainset, batch_size={}, shuffle={}, drop_last={})\n".format(
+                f.write("testloader = DataLoader(testset, batch_size={}, shuffle={}, drop_last={})\n".format(
                     self.batch_size.text(), self.shuffle.isChecked(), self.drop_last.isChecked()
                 ))
                 if self.model['type'] == 1:
@@ -185,3 +179,4 @@ class TestWindow(QDialog, Ui_TestWindow):
                 f.write(space*2+"total += labels.size(0)\n")
                 f.write(space * 2 + "correct += (predicted == labels).sum().item()\n")
                 f.write("print(\'Accuracy of the network on the testset: %d %%\' % (100 * correct / total))\n")
+            self.run_script()

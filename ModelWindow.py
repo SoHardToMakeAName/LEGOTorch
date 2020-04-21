@@ -11,6 +11,7 @@ from PyQt5.QtGui import QRegExpValidator
 from UI_ModelWindow import Ui_ModelWindow
 from UI_AddLayerWindow import Ui_AddLayerWindow
 from TrainWindow import TrainWindow
+from TestWindow import TestWindow
 import os
 import json
 import networkx as nx
@@ -67,6 +68,10 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
     def to_train(self):
         self.train_window = TrainWindow()
         self.train_window.show()
+
+    def to_test(self):
+        self.test_window  = TestWindow()
+        self.test_window.show()
 
     def accept_layer(self, data):
         if not data['type'] == 1:

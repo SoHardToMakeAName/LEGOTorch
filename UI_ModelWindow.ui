@@ -27,7 +27,7 @@
     <property name="title">
      <string>功能</string>
     </property>
-    <addaction name="ToDataset"/>
+    <addaction name="ToTest"/>
     <addaction name="ToTrain"/>
    </widget>
    <widget class="QMenu" name="FileSet">
@@ -49,7 +49,7 @@
    <addaction name="Add"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="ToDataset">
+  <action name="ToTest">
    <property name="text">
     <string>测试</string>
    </property>
@@ -172,11 +172,28 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>ToTest</sender>
+   <signal>triggered()</signal>
+   <receiver>ModelWindow</receiver>
+   <slot>to_test()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>319</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>add_layer()</slot>
   <slot>export_file()</slot>
   <slot>import_file()</slot>
   <slot>to_train()</slot>
+  <slot>to_test()</slot>
  </slots>
 </ui>

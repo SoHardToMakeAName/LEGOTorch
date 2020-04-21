@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TestWindow</class>
- <widget class="QDialog" name="TestWindow">
+ <class>TestWindow2</class>
+ <widget class="QDialog" name="TestWindow2">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -191,7 +191,7 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QTextBrowser" name="textBrowser"/>
+      <widget class="QTextBrowser" name="log"/>
      </item>
     </layout>
    </item>
@@ -202,7 +202,7 @@
   <connection>
    <sender>model_to_load</sender>
    <signal>currentIndexChanged(int)</signal>
-   <receiver>TestWindow</receiver>
+   <receiver>TestWindow2</receiver>
    <slot>load_model()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -218,7 +218,7 @@
   <connection>
    <sender>param_to_load</sender>
    <signal>clicked()</signal>
-   <receiver>TestWindow</receiver>
+   <receiver>TestWindow2</receiver>
    <slot>load_param()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -234,7 +234,7 @@
   <connection>
    <sender>acc_to_load</sender>
    <signal>currentIndexChanged(int)</signal>
-   <receiver>TestWindow</receiver>
+   <receiver>TestWindow2</receiver>
    <slot>load_acc()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -250,7 +250,7 @@
   <connection>
    <sender>start_button</sender>
    <signal>clicked()</signal>
-   <receiver>TestWindow</receiver>
+   <receiver>TestWindow2</receiver>
    <slot>start()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -266,7 +266,7 @@
   <connection>
    <sender>dataset_to_load</sender>
    <signal>currentIndexChanged(int)</signal>
-   <receiver>TestWindow</receiver>
+   <receiver>TestWindow2</receiver>
    <slot>load_dataset()</slot>
    <hints>
     <hint type="sourcelabel">
