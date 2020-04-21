@@ -35,12 +35,14 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.show_every.setValidator(pValidator)
         self.save_every = QLineEdit()
         self.save_every.setValidator(pValidator)
+        self.use_GPU = QCheckBox("在GPU上运行模型")
         self.bottom_layout.addWidget(QLabel("epochs"), 0 ,0)
         self.bottom_layout.addWidget(self.epochs, 0, 1)
+        self.bottom_layout.addWidget(self.use_GPU, 0, 3)
         self.bottom_layout.addWidget(QLabel("显示频率:"), 1, 0)
         self.bottom_layout.addWidget(self.show_every, 1, 1)
-        self.bottom_layout.addWidget(QLabel("储存频率:"), 2, 0)
-        self.bottom_layout.addWidget(self.save_every, 2, 1)
+        self.bottom_layout.addWidget(QLabel("储存频率:"), 1, 2)
+        self.bottom_layout.addWidget(self.save_every, 1, 3)
 
     def load_model(self):
         while self.pretrained_layout.count():
@@ -88,9 +90,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.dataset['para'] = dict()
             self.dataset['para']['root'] = filename
             self.dataset['para']['train'] = True
-            if self.dataset_to_load.currentIndex() in [4, 5]:
-                self.dataset['para']['annFile'] = self.dataset['para']['root']
-            elif self.dataset_to_load.currentIndex() == 6:
+            if self.dataset_to_load.currentIndex() == 4:
                 self.dataset['para']['split'] = 'train'
         reg = QRegExp('[0-9]+$')
         pValidator = QRegExpValidator(self)
@@ -324,7 +324,10 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             space = "    "
             f.write("import torch\nimport sys\nimport torchvision\nimport torchvision.transforms as transforms\n"
                     "import torch.optim as optim\nimport torch.nn as nn\nfrom torch.utils.data import DataLoader\n")
-            f.write("device = torch.device(\"cuda:0\" if torch.cuda.is_available() else \"cpu\")\n")
+            if self.use_GPU.isChecked():
+                f.write("device = torch.device(\"cuda:0\" if torch.cuda.is_available() else \"cpu\")\n")
+            else:
+                f.write("device = torch.device(\"cpu\")\n")
             if self.model['type'] == 1:
                 f.write("sys.path.append(r\'{}\')\n".format(self.model['dir']))
                 appended_dirs.append(self.model['dir'])
@@ -352,13 +355,10 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                     appended_dirs.append(self.dataset['dir'])
                 f.write("from {} import MyDataset\n".format(self.dataset['module']))
                 f.write("trainset = MyDataset()\n")
-            elif self.dataset['type'] in [3, 7]:
+            elif self.dataset['type'] in [3, 5]:
                 f.write("trainset = torchvision.datasets.{}(root=\'{}\', train=True, transform=transform, download="
                         "True)\n".format(self.dataset['name'], self.dataset['para']['root']))
-            elif self.dataset['type'] in [4, 5]:
-                f.write("trainset = torchvision.datasets.{0}(root={1}, annFile={1}, transform=transform)\n".format(
-                    self.dataset['name'], self.dataset['para']['root']))
-            elif self.dataset['type'] == 6:
+            elif self.dataset['type'] == 4:
                 f.write("trainset = torchvision.datasets.{0}(root={1}, split=\'train\', download=True,"
                         "transform=transform)\n".format(self.dataset['name'], self.dataset['para']['root']))
             f.write("trainloader = DataLoader(trainset, batch_size={}, shuffle={}, drop_last={})\n".format(

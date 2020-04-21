@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TestWindow</class>
+ <widget class="QDialog" name="TestWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>测试</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QWidget" name="widget" native="true">
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="3" column="2">
+         <widget class="QPushButton" name="param_to_load">
+          <property name="text">
+           <string>选择</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <layout class="QGridLayout" name="gridLayout_3"/>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>选择模型参数</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>选择要加载的模型</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QComboBox" name="model_to_load">
+          <item>
+           <property name="text">
+            <string>&lt;None&gt;</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>从文件加载</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>resnet18</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>resnet50_32x4d</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>wide_resnet50_2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>alexnet</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>vgg16</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>squeezenet1_0</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>densenet161</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>inception_v3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>goglenet</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>mobilenet_v2</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QComboBox" name="acc_to_load">
+          <item>
+           <property name="text">
+            <string>默认</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>自定义</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="5" column="2">
+         <widget class="QPushButton" name="start_button">
+          <property name="text">
+           <string>启动</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>选择准确率函数</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QCheckBox" name="use_GPU">
+          <property name="text">
+           <string>使用GPU运行</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QComboBox" name="dataset_to_load">
+          <item>
+           <property name="text">
+            <string>&lt;None&gt;</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>从文件加载</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>MINST</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ImageNet</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>CIFAR10</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>选择数据集</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="3">
+         <widget class="QWidget" name="widget_2" native="true">
+          <layout class="QGridLayout" name="gridLayout_6">
+           <item row="0" column="0">
+            <layout class="QGridLayout" name="dataset_layout"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QTextBrowser" name="textBrowser"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>model_to_load</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TestWindow</receiver>
+   <slot>load_model()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>202</x>
+     <y>153</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>210</x>
+     <y>4</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>param_to_load</sender>
+   <signal>clicked()</signal>
+   <receiver>TestWindow</receiver>
+   <slot>load_param()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>177</x>
+     <y>234</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>8</x>
+     <y>181</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>acc_to_load</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TestWindow</receiver>
+   <slot>load_acc()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>176</x>
+     <y>316</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>9</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>start_button</sender>
+   <signal>clicked()</signal>
+   <receiver>TestWindow</receiver>
+   <slot>start()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>210</x>
+     <y>378</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>6</x>
+     <y>391</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dataset_to_load</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TestWindow</receiver>
+   <slot>load_dataset()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>170</x>
+     <y>77</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>7</x>
+     <y>56</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>load_model()</slot>
+  <slot>load_param()</slot>
+  <slot>load_acc()</slot>
+  <slot>start()</slot>
+  <slot>load_dataset()</slot>
+ </slots>
+</ui>
