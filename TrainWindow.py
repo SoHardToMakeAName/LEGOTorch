@@ -12,6 +12,7 @@ import subprocess as sub
 import torchvision
 import sys
 import re
+import threading
 
 class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
     def __init__(self):
@@ -26,6 +27,9 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.data_loss = list()
         self.data_acc = list()
         self.curve = None
+        self.flag = 1
+        self.curve = PlotWindowCustom()
+        self.curve.setPw(1)
         reg = QRegExp('[0-9]+$')
         pValidator = QRegExpValidator(self)
         pValidator.setRegExp(reg)
@@ -307,6 +311,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.optim_layout.addWidget(self.centered, 2, 2)
 
     def start(self):
+        self.flag = 1
         if self.model_to_load.currentIndex() == 0:
             QMessageBox.warning(self, "警告", "未加载模型")
             return 0
@@ -414,14 +419,18 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             f.write(space * 2 + "optimizer.step()\n")
             f.write(space * 2 + "running_loss += loss.item()\n")
             f.write(space+"if (epoch+1) % show_every == 0:\n")
-            f.write(space * 2 + "print(\'epoch %d loss: %.3f\' % (epoch+1, running_loss))\n")
+            f.write(space * 2 + "print(\'epoch %d loss: %.3f\' % (epoch+1, running_loss/i))\n")
             f.write(space + "if (epoch+1) % save_every == 0:\n")
             f.write(space * 2 + "torch.save(net.state_dict(), \'save_model_{}.pth\'.format(epoch+1))\n")
-            self.run_script()
+        self.curve.show()
+        t = threading.Thread(target=self.run_script, name='t', daemon=True)
+        t.start()
 
     def stop(self):
-        if self.p is not None and self.p.poll() is None:
-            self.p.kill()
+        self.flag = 0
+        print("stop function run")
+        # if self.p is not None and self.p.poll() is None:
+        #     self.p.kill()
 
     def reset(self):
         filename, _ = QFileDialog.getOpenFileName(self, '加载模型参数', '/', 'Model state dict (*.pth)')
@@ -437,7 +446,10 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                     if line.startswith('###'):
                         f2.write("net.load_state_dict(torch.load(\'{}\'))\n".format(filename))
             os.replace('tmpnew.py', 'tmp.py')
-            self.run_script()
+            self.flag = 1
+            self.curve.show()
+            t = threading.Thread(target=self.run_script, name='t', daemon=True)
+            t.start()
         except:
             QMessageBox.warning(self, "错误", "找不到文件tmp.py")
 
@@ -448,10 +460,13 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.p = sub.Popen("py -3 {}".format(filename), encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
         has_set = False
         while True:
+            if self.flag == 0:
+                break
             buff = self.p.stdout.readline()
             if buff == '' and self.p.poll() != None:
                 break
             if buff != '':
+                print(buff)
                 self.log.append(buff)
                 self.cursor = self.log.textCursor()
                 self.log.moveCursor(self.cursor.End)
@@ -459,21 +474,24 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 patten = re.compile('([0-9]+(([.]?[0-9]*)|([eE]?[-]?[0-9]*)))')
                 result = patten.findall(buff)
                 if len(result) >= 2:
-                    if not has_set:
-                        has_set = True
-                        self.curve = PlotWindowCustom()
-                        self.curve.setPw(1)
-                        self.curve.show()
                     self.data_x.append(float(result[0][0]))
                     self.data_loss.append(float(result[1][0]))
                     self.curve.plot(data_x=self.data_x, data_y=self.data_loss)
+                    QApplication.processEvents()
+        if self.p is not None and self.p.poll() is None:
+            self.p.kill()
+        self.data_x = list()
+        self.data_loss = list()
 
 
     def load_script(self):
+        self.flag = 1
         filename, _ = QFileDialog.getOpenFileName(self, '加载脚本', '/', 'Python Files (*.py)')
         if filename is None or filename == "":
             return 0
-        self.run_script(filename=filename)
+        self.curve.show()
+        t = threading.Thread(target=self.run_script, name='t', args=(filename,), daemon=True)
+        t.start()
 
     def save(self):
         filename, _ = QFileDialog.getSaveFileName(self, '导出脚本', '/', 'Python Files (*.py)')
@@ -489,9 +507,9 @@ class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
         self.setupUi(self)
         space = "    "
         self.codefield.setPlainText("from torch.utils.data import DataLoader, Dataset\n\nclass MyDataset(Dataset):\n")
-        self.codefield.append(space+"def __init__(self):#初始化参数\n{}\n{}\n".format(space*2))
-        self.codefield.append(space+"def __len__(self):#返回整个数据集的大小\n{}\n{}\n".format(space*2))
-        self.codefield.append(space+"def __getitem__(self, index):#根据索引index返回dataset[index]\n{}\n{}\n".format(space*2))
+        self.codefield.append(space+"def __init__(self):#初始化参数\n{0}\n{0}\n".format(space*2))
+        self.codefield.append(space+"def __len__(self):#返回整个数据集的大小\n{0}\n{0}\n".format(space*2))
+        self.codefield.append(space+"def __getitem__(self, index):#根据索引index返回dataset[index]\n{0}\n{0}\n".format(space*2))
 
     def accept(self):
         filename, _ = QFileDialog.getSaveFileName(self, '储存数据集', '/', 'Python Files (*.py)')
@@ -509,9 +527,9 @@ class NewLossWindow(QDialog, Ui_NewDatasetWindow):
         self.setupUi(self)
         space = "    "
         self.codefield.setPlainText("import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\n")
-        self.codefield.append("class MyLoss(nn.Moudle):\n")
-        self.codefield.append(space+"def __init__(self):#定义超参数\n{}\n{}\n".format(space*2))
-        self.codefield.append(space+"def forward(self):#定义计算过程\n{}\n{}\n".format(space*2))
+        self.codefield.append("class MyLoss(nn.Module):\n")
+        self.codefield.append(space+"def __init__(self):#定义超参数\n{0}\n{0}\n".format(space*2))
+        self.codefield.append(space+"def forward(self):#定义计算过程\n{0}\n{0}\n".format(space*2))
         self.codefield.append(space*2+"return ")
 
     def accept(self):
@@ -543,5 +561,5 @@ class PlotWindowCustom(QMainWindow):
             self.pw.setLabel('bottom', 'epoch')
 
     def plot(self, data_x, data_y):
-        self.pw.plot(x=data_x, y=data_y)
+        self.pw.plot(x=data_x, y=data_y, clear=True)
         QApplication.processEvents()
