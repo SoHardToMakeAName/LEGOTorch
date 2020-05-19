@@ -84,6 +84,11 @@
         <string>Batch Normalization(2d)层</string>
        </property>
       </item>
+      <item>
+       <property name="text">
+        <string>恒等层(Identity)</string>
+       </property>
+      </item>
      </widget>
     </item>
     <item row="1" column="3">

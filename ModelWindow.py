@@ -65,6 +65,28 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.addlayer_window.datasignal.connect(self.accept_layer)
         self.addlayer_window.show()
 
+    def modifiey_layer(self):
+        self.addlayer_window = AddLayerWindow()
+        self.addlayer_window.datasignal.connect(self.accept_layer)
+        self.addlayer_window.layertype.addItem("恒等层(Identity)")
+        self.addlayer_window.show()
+
+    def clear(self):
+        self.fc.clear()
+        self.id_name = dict()
+        self.name_id = dict()
+        self.nodes = dict()
+        self.net = nx.DiGraph()
+        self.fc.clear()
+        self.fc_inputs = dict()
+        self.global_id = 0
+        self.outputs = list()
+        self.detail.clear()
+        self.detail.setColumnCount(2)
+        self.detail.setHeaderLabels(["属性", "值"])
+        self.root = QTreeWidgetItem(self.detail)
+        self.root.setText(0, "所有属性")
+
     def to_train(self):
         self.train_window = TrainWindow()
         self.train_window.show()
@@ -74,12 +96,14 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.test_window.show()
 
     def accept_layer(self, data):
+        reset_flag = False
         if not data['type'] == 1:
             inputs = data['input'].split(";")
             data['input'] = list()
             for i in range(len(inputs)):
                 try:
-                    layer = self.name_id[inputs[i]]
+                    name = inputs[i]
+                    layer = self.name_id[name]
                     if data['type'] == 3 and (self.nodes[inputs[i]]['type'] not in [2, 8, 9, 10]):
                         QMessageBox.warning(self, "错误", "输入：{}层类型不合法".format(inputs[i]))
                         return 0
@@ -105,12 +129,17 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     return 0
         if data['name'] in self.name_id.keys():
             id = self.name_id[data['name']]
+            for input_id in data['input']:
+                if input_id >= id:
+                    QMessageBox.warning(self, "错误", "输入来自后继层")
+                    return 0
             self.net.remove_node(id)
             self.net.add_node(id)
             for i in data['input']:
                 self.net.add_edge(i, id)
             self.fc.removeNode(self.fc.nodes()[data['name']])
             data['ID'] = id
+            reset_flag = True
         else:
             data['ID'] = self.global_id
             self.name_id[data['name']] = self.global_id
@@ -154,6 +183,15 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
         if data['isoutput']:
             self.outputs.append(data['ID'])
+        if reset_flag:
+            for everynode in self.nodes.values():
+                if data['ID'] in everynode['input']:
+                    out_terminal = node.outputs()['dataOut']
+                    if everynode['type'] in [9, 10, 11]:
+                        in_terminal = self.fc.nodes()[everynode['name']].inputs()[data['name']]
+                    else:
+                        in_terminal = self.fc.nodes()[everynode['name']].inputs()['dataIn']
+                    self.fc.connectTerminals(in_terminal, out_terminal)
 
     def export_file(self):
         filename, _ = QFileDialog.getSaveFileName(self, '导出模型', 'C:\\', 'Python Files (*.py)')
@@ -187,6 +225,8 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                         if k in ['stride', 'padding', 'dilation', 'bias', 'padding_mode'] and v is not None:
                             f.write(","+k+"="+str(v))
                     f.write(")\n")
+                elif layer['type'] == 12:
+                    f.write(space*2+"self.{} = nn.Identity()\n".format(name))
                 elif layer['type'] == 3:
                     if layer['para']['type'] == "max":
                         f.write(space*2+"self."+layer['name']+" = nn.MaxPool2d(")
@@ -295,20 +335,25 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                         input_name = self.id_name[input_id]
                         layers_to_cat.append(input_name)
                     f.write(space * 2 + layer['name'] + " = torch.cat([{}], 1)\n".format(",".join(layers_to_cat)))
+                elif layer['type'] == 12:
+                    f.write(space*2+layer['name']+" = self.{}({})\n".format(self.id_name[layer['input'][0]]))
                 if layer['isoutput']:
                     return_layers.append(layer['name'])
             f.write(space*2+"return {}\n".format(",".join(return_layers)))
 
     def check(self):
         if len(self.outputs) == 0:
+            QMessageBox.warning(self, "错误", "模型没有输出")
             return 0
         for item in self.nodes.values():
             if type(item['para']['out_size']) is int:
                 if item['para']['out_size'] <= 0:
+                    QMessageBox.warning(self, "错误", "{}层输出尺寸为负数或0".format(item['name']))
                     return 0
             else:
                 for size in item['para']['out_size']:
                     if size <= 0:
+                        QMessageBox.warning(self, "错误", "{}层输出尺寸为负数或0".format(item['name']))
                         return 0
 
     def import_file(self):
@@ -728,6 +773,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
         if send_data:
             self.datasignal.emit(data)
             self.destroy()
+
 
 
 if __name__ == "__main__":

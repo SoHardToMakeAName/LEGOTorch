@@ -345,6 +345,7 @@ class AddNode(Node):
         self.view = None
         self.para = None
         self.thisname = name
+        self.para_showed = False
         terminals = {'dataOut': dict(io='out')}
         Node.__init__(self, name, terminals=terminals, allowAddInput=True)
 
@@ -358,12 +359,14 @@ class AddNode(Node):
         c, h, w = kargs.popitem()[1]
         self.para['out_size'] = (int(c), int(h), int(w))
         output = np.array(self.para['out_size'])
-        self.child = QTreeWidgetItem()
-        self.child.setText(0, self.thisname)
-        self.view.addChild(self.child)
-        for k, v in self.para.items():
-            attr = QTreeWidgetItem()
-            attr.setText(0, k)
-            attr.setText(1, str(v))
-            self.child.addChild(attr)
+        if not self.para_showed:
+            self.child = QTreeWidgetItem()
+            self.child.setText(0, self.thisname)
+            self.view.addChild(self.child)
+            for k, v in self.para.items():
+                attr = QTreeWidgetItem()
+                attr.setText(0, k)
+                attr.setText(1, str(v))
+                self.child.addChild(attr)
+            self.para_showed = True
         return {'dataOut': output}

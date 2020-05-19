@@ -43,6 +43,7 @@
     </property>
     <addaction name="AddLayer"/>
     <addaction name="AddModel"/>
+    <addaction name="Clear"/>
    </widget>
    <addaction name="Function"/>
    <addaction name="FileSet"/>
@@ -87,6 +88,16 @@
   <action name="ExportWithoutCheck">
    <property name="text">
     <string>导出但不检查</string>
+   </property>
+  </action>
+  <action name="DeleteLayer">
+   <property name="text">
+    <string>删除</string>
+   </property>
+  </action>
+  <action name="Clear">
+   <property name="text">
+    <string>清空</string>
    </property>
   </action>
  </widget>
@@ -160,7 +171,7 @@
    <sender>AddModel</sender>
    <signal>triggered()</signal>
    <receiver>ModelWindow</receiver>
-   <slot>add_layer()</slot>
+   <slot>modifiey_layer()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -188,6 +199,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>Clear</sender>
+   <signal>triggered()</signal>
+   <receiver>ModelWindow</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>319</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>add_layer()</slot>
@@ -195,5 +222,7 @@
   <slot>import_file()</slot>
   <slot>to_train()</slot>
   <slot>to_test()</slot>
+  <slot>clear()</slot>
+  <slot>modifiey_layer()</slot>
  </slots>
 </ui>
