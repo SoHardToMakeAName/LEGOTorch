@@ -18,7 +18,7 @@ import networkx as nx
 import numpy as np
 import random
 from FCNodes import CovNode, PoolNode, LinearNode, ConcatNode, Concat1dNode, SoftmaxNode, \
-    LogSoftmaxNode, BachNorm1dNode, BachNorm2dNode, AddNode
+    LogSoftmaxNode, BachNorm1dNode, BachNorm2dNode, AddNode, IdentityNode
 
 
 class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
@@ -41,8 +41,9 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.library.addNodeType(BachNorm1dNode, [('BachNorm1dNode',)])
         self.library.addNodeType(BachNorm2dNode, [('BachNorm2dNode',)])
         self.library.addNodeType(AddNode, [('ResAddNode',)])
+        self.library.addNodeType(IdentityNode, [('IdentityNode',)])
         self.type_name = {2:'Cov2d', 3:'Pool2d', 4:'Linear', 5:'Softmax', 6:'LogSoftmax', 7:'BachNorm1d',
-                          8:'BachNorm2d', 9:'Res_Add', 10:'Concat2d', 11: 'Concat1d'}
+                          8:'BachNorm2d', 9:'Res_Add', 10:'Concat2d', 11: 'Concat1d', 12: 'Identity'}
         self.fc = Flowchart()
         self.fc.setLibrary(self.library)
         self.outputs = list()
@@ -97,7 +98,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
 
     def accept_layer(self, data):
         reset_flag = False
-        if not data['type'] == 1:
+        if not data['type'] in [1, 12]:
             inputs = data['input'].split(";")
             data['input'] = list()
             for i in range(len(inputs)):
@@ -133,6 +134,10 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 if input_id >= id:
                     QMessageBox.warning(self, "错误", "输入来自后继层")
                     return 0
+            if data['type'] == 12:
+                data['para']['former_type'] = self.nodes[data['name']]['type']
+                if len(data['input']) == 0:
+                    data['input'].append(self.nodes[data['name']]['input'][0])
             self.net.remove_node(id)
             self.net.add_node(id)
             for i in data['input']:
@@ -192,6 +197,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     else:
                         in_terminal = self.fc.nodes()[everynode['name']].inputs()['dataIn']
                     self.fc.connectTerminals(in_terminal, out_terminal)
+                    self.net.add_edge(data['ID'], everynode['ID'])
 
     def export_file(self):
         filename, _ = QFileDialog.getSaveFileName(self, '导出模型', 'C:\\', 'Python Files (*.py)')
@@ -336,7 +342,8 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                         layers_to_cat.append(input_name)
                     f.write(space * 2 + layer['name'] + " = torch.cat([{}], 1)\n".format(",".join(layers_to_cat)))
                 elif layer['type'] == 12:
-                    f.write(space*2+layer['name']+" = self.{}({})\n".format(self.id_name[layer['input'][0]]))
+                    f.write(space*2+layer['name']+" = self.{}({})\n".format(layer['name'],
+                                                                            self.id_name[layer['input'][0]]))
                 if layer['isoutput']:
                     return_layers.append(layer['name'])
             f.write(space*2+"return {}\n".format(",".join(return_layers)))
@@ -376,7 +383,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.root.setText(0, "所有属性")
         for data in d_json:
             self.id_name[data['ID']] = data['name']
-            self.name_id[data['ID']] = data['ID']
+            self.name_id[data['name']] = data['ID']
             self.nodes[data['name']] = data
             self.net.add_node(data['ID'])
             for i in data['input']:
@@ -641,10 +648,10 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             send_data = False
         else:
             data['type'] = self.layertype.currentIndex()
-        if self.layerinput.text() == "":
+        if self.layerinput.text() == "" and self.layertype.currentIndex() not in [1, 12]:
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的输入")
             send_data = False
-        elif self.layertype.currentIndex() not in [9, 10, 11] \
+        elif self.layertype.currentIndex() not in [9, 10, 11, 12] \
                 and len(self.layerinput.text().split(";")) > 1:
             QMessageBox.warning(self, "警告", "不合法输入：输入多于一个")
             send_data = False

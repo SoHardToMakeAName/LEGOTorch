@@ -338,6 +338,42 @@ class BachNorm2dNode(Node):
         return {'dataOut': output}
 
 
+class IdentityNode(Node):
+    nodeName = 'Identity'
+
+    def __init__(self, name):
+        self.view = None
+        self.para = None
+        self.thisname = name
+        terminals = {'dataIn': dict(io='in'), 'dataOut': dict(io='out')}
+        Node.__init__(self, name, terminals=terminals)
+
+    def setView(self, view):
+        self.view = view
+
+    def setPara(self, para):
+        self.para = para
+
+    def process(self, dataIn):
+        output = dataIn
+        try:
+            c, h, w = dataIn.tolist()
+            self.para['in_size'] = (c, h, w)
+            self.para['out_size'] = (c, h, w)
+        except:
+            self.para['in_size'] = dataIn
+            self.para['out_size'] = dataIn
+        self.child = QTreeWidgetItem()
+        self.child.setText(0, self.thisname)
+        self.view.addChild(self.child)
+        for k, v in self.para.items():
+            attr = QTreeWidgetItem()
+            attr.setText(0, k)
+            attr.setText(1, str(v))
+            self.child.addChild(attr)
+        return {'dataOut': output}
+
+
 class AddNode(Node):
     nodeName = 'Res_Add'
 

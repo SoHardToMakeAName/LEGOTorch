@@ -5,6 +5,7 @@ import os
 from PyQt5.QtCore import QRegExp
 from PyQt5.QtGui import QRegExpValidator
 import subprocess as sub
+import threading
 
 class TestWindow(QDialog, Ui_TestWindow2):
     def __init__(self):
@@ -179,4 +180,5 @@ class TestWindow(QDialog, Ui_TestWindow2):
                 f.write(space*2+"total += labels.size(0)\n")
                 f.write(space * 2 + "correct += (predicted == labels).sum().item()\n")
                 f.write("print(\'Accuracy of the network on the testset: %d %%\' % (100 * correct / total))\n")
-            self.run_script()
+            t = threading.Thread(target=self.run_script, name='t', daemon=True)
+            t.start()
