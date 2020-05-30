@@ -346,7 +346,10 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                                                                             self.id_name[layer['input'][0]]))
                 if layer['isoutput']:
                     return_layers.append(layer['name'])
-            f.write(space*2+"return {}\n".format(",".join(return_layers)))
+            if len(return_layers) > 1:
+                f.write(space*2+"return {}\n".format(",".join(return_layers)))
+            else:
+                f.write(space*2+"return {}".format(return_layers[0]))
 
     def check(self):
         if len(self.outputs) == 0:
