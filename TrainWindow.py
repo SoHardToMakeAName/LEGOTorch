@@ -345,12 +345,13 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                     f.write("net = models.{}(pretrained=True)\n".format(self.model['name']))
                 else:
                     f.write("net = models.{}(pretrained=False)\n".format(self.model['name']))
+                f.write("net.to(device)\n")
             f.write("###load net\n")
             if self.resize_w.text() == "" or self.resize_h.text() == "" or self.resize is False:
                 f.write("transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize"
                         "(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])])\n")
             else:
-                f.write("transform = transforms.Compose([transforms.Resize(size=({},{}),transfroms.ToTensor(), "
+                f.write("transform = transforms.Compose([transforms.Resize(size=({},{})),transforms.ToTensor(), "
                         "transforms.Normalize(mean=[0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])])\n".format(
                     self.resize_h.text(), self.resize_w.text()
                 ))
