@@ -9,23 +9,23 @@ import numpy as np
 import math
 
 
-class CovNode(Node):
+class CovNode(Node):#卷积层对应的类
     nodeName = 'Cov2d'
 
-    def __init__(self, name):
+    def __init__(self, name):#初始化，确定输入输出端口
         self.view = None
         self.para = None
         self.thisname = name
         terminals = {'dataIn': dict(io='in'), 'dataOut': dict(io='out')}
         Node.__init__(self, name, terminals=terminals)
 
-    def setView(self, view):
+    def setView(self, view):#传递TreeView的根节点
         self.view = view
 
-    def setPara(self, para):
+    def setPara(self, para):#传递层的参数
         self.para = para
 
-    def process(self, dataIn):
+    def process(self, dataIn):#进行运算
         c_in = int(dataIn[0])
         h_in = int(dataIn[1])
         w_in = int(dataIn[2])
@@ -40,12 +40,12 @@ class CovNode(Node):
         w_out = math.floor((h_in + 2 * padding_w - dilation_w * (kernel_w - 1) - 1) // stride_w + 1)
         c_out = self.para['outchannels']
         self.para['in_size'] = (c_in, h_in, w_in)
-        self.para['out_size'] = (c_out, h_out, w_out)
+        self.para['out_size'] = (c_out, h_out, w_out)#根据公式计算输出尺寸
         output = np.array(self.para['out_size'])
         self.child = QTreeWidgetItem()
         self.child.setText(0, self.thisname)
         self.view.addChild(self.child)
-        for k, v in self.para.items():
+        for k, v in self.para.items():#将参数写到TreeView
             attr = QTreeWidgetItem()
             attr.setText(0, k)
             attr.setText(1, str(v))

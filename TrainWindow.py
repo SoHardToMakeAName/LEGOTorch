@@ -14,7 +14,7 @@ import sys
 import re
 import threading
 
-class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
+class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):#训练界面对应的类
     def __init__(self):
         super(TrainWindow, self).__init__()
         self.setupUi(self)
@@ -48,7 +48,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.bottom_layout.addWidget(QLabel("储存频率:"), 1, 2)
         self.bottom_layout.addWidget(self.save_every, 1, 3)
 
-    def load_model(self):
+    def load_model(self):#加载模型
         while self.pretrained_layout.count():
             child = self.pretrained_layout.takeAt(0)
             if child.widget():
@@ -69,7 +69,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.model['name'] = self.model_to_load.currentText()
             self.log.append("加载模型:{}\n".format(self.model['name']))
 
-    def load_dataset(self):
+    def load_dataset(self):#加载数据集
         while self.dataset_layout.count():
             child = self.dataset_layout.takeAt(0)
             if child.widget():
@@ -125,7 +125,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         # self.dataset_layout.addWidget(label_sampler, 3, 0)
         # self.dataset_layout.addWidget(self.sampler, 3, 1)
 
-    def load_loss_function(self):
+    def load_loss_function(self):#加载损失函数
         while self.loss_layout.count():
             child = self.loss_layout.takeAt(0)
             if child.widget():
@@ -179,7 +179,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
                 self.loss_layout.addWidget(label_reduction, 2, 0)
                 self.loss_layout.addWidget(self.reduction, 2, 1)
 
-    def load_optim(self):
+    def load_optim(self):#加载优化器
         while self.optim_layout.count():
             child = self.optim_layout.takeAt(0)
             if child.widget():
@@ -310,7 +310,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             self.optim_layout.addWidget(self.weight_decay, 2, 1)
             self.optim_layout.addWidget(self.centered, 2, 2)
 
-    def start(self):
+    def start(self):#运行默认的训练脚本
         self.flag = 1
         if self.model_to_load.currentIndex() == 0:
             QMessageBox.warning(self, "警告", "未加载模型")
@@ -427,13 +427,13 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         t = threading.Thread(target=self.run_script, name='t', daemon=True)
         t.start()
 
-    def stop(self):
+    def stop(self):#停止脚本的运行
         self.flag = 0
         print("stop function run")
         # if self.p is not None and self.p.poll() is None:
         #     self.p.kill()
 
-    def reset(self):
+    def reset(self):#重载功能
         filename, _ = QFileDialog.getOpenFileName(self, '加载模型参数', '/', 'Model state dict (*.pth)')
         if filename is None or filename == "":
             return 0
@@ -485,7 +485,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         self.data_loss = list()
 
 
-    def load_script(self):
+    def load_script(self):#加载自定义脚本
         self.flag = 1
         filename, _ = QFileDialog.getOpenFileName(self, '加载脚本', '/', 'Python Files (*.py)')
         if filename is None or filename == "":
@@ -502,7 +502,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
             shutil.copyfile('tmp.py', filename)
 
 
-class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
+class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):#自定义数据集类编辑器
     def __init__(self):
         super(NewDatasetWindow, self).__init__()
         self.setupUi(self)
@@ -522,7 +522,7 @@ class NewDatasetWindow(QDialog, Ui_NewDatasetWindow):
     def reject(self):
         self.destroy()
 
-class NewLossWindow(QDialog, Ui_NewDatasetWindow):
+class NewLossWindow(QDialog, Ui_NewDatasetWindow):#自定义损失函数类编辑器
     def __init__(self):
         super(NewDatasetWindow, self).__init__()
         self.setupUi(self)
@@ -544,7 +544,7 @@ class NewLossWindow(QDialog, Ui_NewDatasetWindow):
         self.destroy()
 
 
-class PlotWindowCustom(QMainWindow):
+class PlotWindowCustom(QMainWindow):#训练图示对应的类
     def __init__(self):
         super(QMainWindow,self).__init__()
         self.resize(650, 350)
@@ -561,6 +561,6 @@ class PlotWindowCustom(QMainWindow):
             self.pw.setLabel('left', 'loss')
             self.pw.setLabel('bottom', 'epoch')
 
-    def plot(self, data_x, data_y):
+    def plot(self, data_x, data_y):#绘图函数
         self.pw.plot(x=data_x, y=data_y, clear=True)
         QApplication.processEvents()

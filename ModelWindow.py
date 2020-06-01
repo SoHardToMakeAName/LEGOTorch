@@ -21,15 +21,15 @@ from FCNodes import CovNode, PoolNode, LinearNode, ConcatNode, Concat1dNode, Sof
     LogSoftmaxNode, BachNorm1dNode, BachNorm2dNode, AddNode, IdentityNode
 
 
-class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
+class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):#模型界面对应的类
     def __init__(self):
         super(ModelWindow, self).__init__()
         self.setupUi(self)
-        self.global_id = 0
-        self.nodes = dict()
-        self.id_name = dict()
-        self.name_id = dict()
-        self.net = nx.DiGraph()
+        self.global_id = 0#每个层对应的唯一ID，用于基于DAG图的校验和代码生成
+        self.nodes = dict()#所有层的信息
+        self.id_name = dict()#ID-名字映射
+        self.name_id = dict()#名字-ID映射
+        self.net = nx.DiGraph()#图，节点为层的ID
         self.library = fclib.LIBRARY.copy()
         self.library.addNodeType(CovNode, [('CovNode',)])
         self.library.addNodeType(PoolNode, [('PoolNode',)])
@@ -44,11 +44,11 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.library.addNodeType(IdentityNode, [('IdentityNode',)])
         self.type_name = {2:'Cov2d', 3:'Pool2d', 4:'Linear', 5:'Softmax', 6:'LogSoftmax', 7:'BachNorm1d',
                           8:'BachNorm2d', 9:'Res_Add', 10:'Concat2d', 11: 'Concat1d', 12: 'Identity'}
-        self.fc = Flowchart()
-        self.fc.setLibrary(self.library)
-        self.outputs = list()
+        self.fc = Flowchart()#模型可视化的流程图，对应FlowChart按钮
+        self.fc.setLibrary(self.library)#引入FCNodes.py中定义的Node
+        self.outputs = list()#模型所有输出
         w = self.fc.widget()
-        self.fc_inputs = dict()
+        self.fc_inputs = dict()#self.fc流程图的输入
         main_widget = QWidget()
         main_layout = QGridLayout()
         main_widget.setLayout(main_layout)
@@ -61,18 +61,18 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         main_layout.addWidget(self.detail, 0, 2)
         self.setCentralWidget(main_widget)
 
-    def add_layer(self):
+    def add_layer(self):#用于弹出“层-新建”动作对应的层操作界面
         self.addlayer_window = AddLayerWindow()
         self.addlayer_window.datasignal.connect(self.accept_layer)
         self.addlayer_window.show()
 
-    def modifiey_layer(self):
+    def modifiey_layer(self):#用于弹出“层-更改”动作对应的层操作界面
         self.addlayer_window = AddLayerWindow()
         self.addlayer_window.datasignal.connect(self.accept_layer)
         self.addlayer_window.layertype.addItem("恒等层(Identity)")
         self.addlayer_window.show()
 
-    def clear(self):
+    def clear(self):#对应“层-清除”，清除当前模型
         self.fc.clear()
         self.id_name = dict()
         self.name_id = dict()
@@ -88,20 +88,20 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
         self.root = QTreeWidgetItem(self.detail)
         self.root.setText(0, "所有属性")
 
-    def to_train(self):
+    def to_train(self):#对应“功能-训练”动作，跳转到训练界面
         self.train_window = TrainWindow()
         self.train_window.show()
 
-    def to_test(self):
+    def to_test(self):#对应“功能-测试”动作，跳转到测试界面
         self.test_window  = TestWindow()
         self.test_window.show()
 
-    def accept_layer(self, data):
+    def accept_layer(self, data):#接收层操作界面中信号的槽函数，接收层操作界面传来的数据并显示在该界面上
         reset_flag = False
-        if not data['type'] in [1, 12]:
+        if not data['type'] in [1, 12]:#对输入层和恒等层不检查输入
             inputs = data['input'].split(";")
             data['input'] = list()
-            for i in range(len(inputs)):
+            for i in range(len(inputs)):#判断连接是否合法
                 try:
                     name = inputs[i]
                     layer = self.name_id[name]
@@ -114,13 +114,13 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     elif (data['type'] in [2, 8, 10]) and (self.nodes[inputs[i]]['type'] not in [1, 2, 3, 8, 9, 10]):
                         QMessageBox.warning(self, "错误", "输入：{}层类型不合法".format(inputs[i]))
                         return 0
-                    data['input'].append(layer)
+                    data['input'].append(layer)#将input中的层名替换为对应的ID
                 except:
                     QMessageBox.warning(self, "错误", "输入来自未生成的层：{}".format(inputs[i]))
                     return 0
         else:
             data['input'] = list()
-        if data['type'] == 9:
+        if data['type'] == 9:#残差连接层判断两个输入size是否相同
             layer_id = data['input'][0]
             cur_size = self.nodes[self.id_name[layer_id]]['para']['out_size']
             for layer_id in data['input']:
@@ -128,7 +128,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 if layer['para']['out_size'] != cur_size:
                     QMessageBox.warning(self, "错误", "输入尺寸不匹配")
                     return 0
-        if data['name'] in self.name_id.keys():
+        if data['name'] in self.name_id.keys():#替换同名层的情形
             id = self.name_id[data['name']]
             for input_id in data['input']:
                 if input_id >= id:
@@ -145,7 +145,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             self.fc.removeNode(self.fc.nodes()[data['name']])
             data['ID'] = id
             reset_flag = True
-        else:
+        else:#新建层
             data['ID'] = self.global_id
             self.name_id[data['name']] = self.global_id
             self.id_name[self.global_id] = data['name']
@@ -154,11 +154,11 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 self.net.add_edge(i, self.global_id)
             self.global_id += 1
         self.nodes[data['name']] = data
-        if data['type'] == 1:
+        if data['type'] == 1:#输入层对应的流程图操作
             self.fc.addInput(data['name'])
             self.fc_inputs[data['name']] = data['para']['out_size']
             self.fc.setInput(**self.fc_inputs)
-        elif data['type'] in [9, 10, 11]:
+        elif data['type'] in [9, 10, 11]:#concat2D、concat1D和残差连接层的流程图操作
             node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
                                       pos=(data['input'][0] * 120, (data['ID'] - data['input'][0]) * 150 - 500))
             node.setPara(data['para'])
@@ -174,7 +174,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             if data['isoutput']:
                 self.fc.addOutput(data['name'])
                 self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
-        else:
+        else:#其他层的流程图操作
             node = self.fc.createNode(self.type_name[data['type']], name=data['name'],
                                           pos=(data['input'][0] * 120, (data['ID'] - data['input'][0]) * 150 - 500))
             node.setPara(data['para'])
@@ -186,9 +186,9 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             if data['isoutput']:
                 self.fc.addOutput(data['name'])
                 self.fc.connectTerminals(node['dataOut'], self.fc[data['name']])
-        if data['isoutput']:
+        if data['isoutput']:#添加流程图输出
             self.outputs.append(data['ID'])
-        if reset_flag:
+        if reset_flag:#对替换的层恢复后向的连接
             for everynode in self.nodes.values():
                 if data['ID'] in everynode['input']:
                     out_terminal = node.outputs()['dataOut']
@@ -199,7 +199,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                     self.fc.connectTerminals(in_terminal, out_terminal)
                     self.net.add_edge(data['ID'], everynode['ID'])
 
-    def export_file(self):
+    def export_file(self):#导出pytorch脚本
         filename, _ = QFileDialog.getSaveFileName(self, '导出模型', 'C:\\', 'Python Files (*.py)')
         if filename is None or filename == "":
             return 0
@@ -219,7 +219,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             f.write('import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n')
             f.write("class Net(nn.Module):\n")
             f.write(space+"def __init__(self):\n")
-            f.write(space*2+"super(Net, self).__init__()\n")
+            f.write(space*2+"super(Net, self).__init__()\n")#一下为__init__函数
             for id in sort:
                 name = self.id_name[id]
                 layer = self.nodes[name]
@@ -351,7 +351,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
             else:
                 f.write(space*2+"return {}".format(return_layers[0]))
 
-    def check(self):
+    def check(self):#基于DAG的校验
         if len(self.outputs) == 0:
             QMessageBox.warning(self, "错误", "模型没有输出")
             return 0
@@ -366,7 +366,7 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                         QMessageBox.warning(self, "错误", "{}层输出尺寸为负数或0".format(item['name']))
                         return 0
 
-    def import_file(self):
+    def import_file(self):#导入json文件重建模型
         filename, _ = QFileDialog.getOpenFileName(self, '导入模型', 'C:\\', 'JSON Files (*.json)')
         if filename is None or filename == "":
             return 0
@@ -430,15 +430,15 @@ class ModelWindow(QtWidgets.QMainWindow, Ui_ModelWindow):
                 self.outputs.append(data['ID'])
 
 
-class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
-    datasignal = pyqtSignal(dict)
+class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):#层操作界面对应的类
+    datasignal = pyqtSignal(dict)#定义信号，类型为python字典
 
     def __init__(self):
         super(AddLayerWindow, self).__init__()
         self.setupUi(self)
         self.setFixedSize(433, 374)
 
-    def fill_content(self):
+    def fill_content(self):#按层的种类动态填充参数面板
         while self.content.count():
             child = self.content.takeAt(0)
             if child.widget():
@@ -638,19 +638,19 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             self.content.addWidget(self.affine, 2, 0)
             self.content.addWidget(self.track_running_stats, 3, 0)
 
-    def gen_layer(self):
+    def gen_layer(self):#“添加”按钮对应的槽函数，收集界面参数并发送信号
         send_data = True
-        data = dict()
+        data = dict()#一个层所有信息都在data中
         if self.layername.text() == "":
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的名字")
             send_data = False
         else:
-            data['name'] = self.layername.text()
+            data['name'] = self.layername.text()#层名
         if self.layertype.currentIndex() == 0:
             QMessageBox.warning(self, "警告", "不合法输入：未选择层的类型")
             send_data = False
         else:
-            data['type'] = self.layertype.currentIndex()
+            data['type'] = self.layertype.currentIndex()#层的种类
         if self.layerinput.text() == "" and self.layertype.currentIndex() not in [1, 12]:
             QMessageBox.warning(self, "警告", "不合法输入：未指定层的输入")
             send_data = False
@@ -659,9 +659,9 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
             QMessageBox.warning(self, "警告", "不合法输入：输入多于一个")
             send_data = False
         else:
-            data['input'] = self.layerinput.text()
+            data['input'] = self.layerinput.text()#层的输入（内容为名字）
         data['isoutput'] = self.layeroutput.isChecked()
-        data['para'] = dict()
+        data['para'] = dict()#层的参数
         if self.layertype.currentIndex() == 1:
             try:
                 data['para']['out_size'] = (int(self.sizec.text()), int(self.sizeh.text()), int(self.sizew.text()))

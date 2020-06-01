@@ -7,7 +7,7 @@ from PyQt5.QtGui import QRegExpValidator
 import subprocess as sub
 import threading
 
-class TestWindow(QDialog, Ui_TestWindow2):
+class TestWindow(QDialog, Ui_TestWindow2):#测试界面对应的类
     def __init__(self):
         super(TestWindow, self).__init__()
         self.setupUi(self)
@@ -17,7 +17,7 @@ class TestWindow(QDialog, Ui_TestWindow2):
         self.script = None
         self.param_path = None
 
-    def run_script(self, filename='tmp2.py'):
+    def run_script(self, filename='tmp2.py'):#创建子进程运行脚本
         print("run_script starts!")
         if self.p is not None and self.p.poll() is None:
             self.p.kill()
@@ -31,7 +31,7 @@ class TestWindow(QDialog, Ui_TestWindow2):
                 self.log.append(buff)
                 QApplication.processEvents()
 
-    def load_model(self):
+    def load_model(self):#加载模型的槽函数
         if self.model_to_load.currentIndex() == 1:
             filename, _ = QFileDialog.getOpenFileName(self, '加载模型', '/', 'Python Files (*.py)')
             if filename is None or filename == "":
@@ -46,14 +46,14 @@ class TestWindow(QDialog, Ui_TestWindow2):
             self.model['name'] = self.model_to_load.currentText()
             self.log.append("加载模型:{}\n".format(self.model['name']))
 
-    def load_param(self):
+    def load_param(self):#加载参数的槽函数
         filename, _ = QFileDialog.getOpenFileName(self, '加载模型参数', '/', 'Model state dict (*.pth)')
         if filename is None or filename == "":
             return 0
         self.param_path = filename
         self.log.append("加载模型参数：{}".format(filename))
 
-    def load_acc(self):
+    def load_acc(self):#加载测试脚本的槽函数
         if self.acc_to_load.currentIndex() == 1:
             filename, _ = QFileDialog.getOpenFileName(self, '自定义脚本', '/', 'Python File (*.py)')
             if filename is None or filename == "":
@@ -61,7 +61,7 @@ class TestWindow(QDialog, Ui_TestWindow2):
             self.script = filename
             self.log.append("加载脚本:{}".format(filename))
 
-    def load_dataset(self):
+    def load_dataset(self):#加载数据集的槽函数
         while self.dataset_layout.count():
             child = self.dataset_layout.takeAt(0)
             if child.widget():
@@ -113,7 +113,7 @@ class TestWindow(QDialog, Ui_TestWindow2):
         # self.dataset_layout.addWidget(label_sampler, 3, 0)
         # self.dataset_layout.addWidget(self.sampler, 3, 1)
 
-    def start(self):
+    def start(self):#运行默认的测试脚本
         if self.acc_to_load.currentIndex() == 1:
             self.run_script(filename=self.script)
         else:
