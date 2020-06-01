@@ -783,6 +783,7 @@ class AddLayerWindow(QtWidgets.QDialog, Ui_AddLayerWindow):
         if send_data:
             self.datasignal.emit(data)
             self.destroy()
+        return 0
 
 
 

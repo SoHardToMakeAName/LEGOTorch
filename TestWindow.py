@@ -21,7 +21,7 @@ class TestWindow(QDialog, Ui_TestWindow2):
         print("run_script starts!")
         if self.p is not None and self.p.poll() is None:
             self.p.kill()
-        self.p = sub.Popen("py -3 {}".format(filename), encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
+        self.p = sub.Popen("python {}".format(filename), encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
         while True:
             buff = self.p.stdout.readline()
             print(buff)

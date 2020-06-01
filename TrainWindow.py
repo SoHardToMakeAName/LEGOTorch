@@ -458,7 +458,7 @@ class TrainWindow(QtWidgets.QWidget, Ui_UI_TrainWindow):
         print("run_script starts!")
         if self.p is not None and self.p.poll() is None:
             self.p.kill()
-        self.p = sub.Popen("py -3 {}".format(filename), encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
+        self.p = sub.Popen("python {}".format(filename), encoding='utf-8', stdout=sub.PIPE, stderr=sub.STDOUT)
         has_set = False
         while True:
             if self.flag == 0:
